@@ -5,6 +5,7 @@ import { FeedEntryCard } from "@/modules/feeds/components/feed-entry-card";
 import { AddFeedDialog } from "@/modules/feeds/components/add-feed-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
+import { RefreshButton } from "@/components/shared/refresh-button";
 import { Rss } from "lucide-react";
 import { markAllAsRead } from "./actions";
 
@@ -44,7 +45,10 @@ export default async function FeedsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Feeds</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold">Feeds</h1>
+          <RefreshButton />
+        </div>
         <AddFeedDialog slug={slug} />
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addBlock } from "@/app/(app)/i/[slug]/newspaper/actions";
@@ -65,7 +66,7 @@ export function AddBlockForm({ newspaperId, slug }: { newspaperId: string; slug:
         />
       </div>
       <div className="flex gap-2">
-        <Button type="submit">Add Block</Button>
+        <SubmitButton>Add Block</SubmitButton>
         <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
           Cancel
         </Button>

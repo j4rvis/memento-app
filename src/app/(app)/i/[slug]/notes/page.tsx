@@ -3,6 +3,7 @@ import { resolveInstance } from "@/lib/instance/server";
 import { NoteCard } from "@/modules/notes/components/note-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
+import { RefreshButton } from "@/components/shared/refresh-button";
 import { StickyNote, Plus } from "lucide-react";
 import { createNote } from "./actions";
 
@@ -25,7 +26,10 @@ export default async function NotesPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Notes</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold">Notes</h1>
+          <RefreshButton />
+        </div>
         <form action={async () => { "use server"; await createNote(slug); }}>
           <Button>
             <Plus className="mr-2 h-4 w-4" />

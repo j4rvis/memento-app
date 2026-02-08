@@ -23,6 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -57,6 +58,7 @@ export function AppSidebar({
   role,
 }: AppSidebarProps) {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
 
   const visibleModules = moduleItems.filter((item) => features[item.key]);
 
@@ -102,7 +104,7 @@ export function AppSidebar({
                     asChild
                     isActive={pathname.startsWith(`/i/${slug}/${item.path}`)}
                   >
-                    <Link href={`/i/${slug}/${item.path}`}>
+                    <Link href={`/i/${slug}/${item.path}`} onClick={() => setOpenMobile(false)}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -118,7 +120,7 @@ export function AppSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/account"}>
-                  <Link href="/account">
+                  <Link href="/account" onClick={() => setOpenMobile(false)}>
                     <User className="h-4 w-4" />
                     <span>Account</span>
                   </Link>
@@ -130,7 +132,7 @@ export function AppSidebar({
                     asChild
                     isActive={pathname.startsWith(`/i/${slug}/settings`)}
                   >
-                    <Link href={`/i/${slug}/settings`}>
+                    <Link href={`/i/${slug}/settings`} onClick={() => setOpenMobile(false)}>
                       <Settings className="h-4 w-4" />
                       <span>Workspace Settings</span>
                     </Link>

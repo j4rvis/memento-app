@@ -60,6 +60,7 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
           <iframe
             src={`https://www.youtube.com/embed/${article.youtube_video_id}`}
             className="h-full w-full rounded-lg"
+            loading="lazy"
             allowFullScreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />

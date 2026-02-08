@@ -22,7 +22,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ email, fullName, avatarUrl }: AppHeaderProps) {
   return (
-    <header className="flex h-14 items-center gap-4 border-b px-4">
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
       <SidebarTrigger />
       <div className="flex-1" />
       <ThemeToggle />

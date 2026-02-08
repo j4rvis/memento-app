@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,7 +17,6 @@ import { Plus } from "lucide-react";
 
 export function AddFeedDialog({ slug }: { slug: string }) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -32,13 +32,8 @@ export function AddFeedDialog({ slug }: { slug: string }) {
         </DialogHeader>
         <form
           action={async (formData) => {
-            setLoading(true);
-            try {
-              await addFeed(slug, formData);
-              setOpen(false);
-            } finally {
-              setLoading(false);
-            }
+            await addFeed(slug, formData);
+            setOpen(false);
           }}
           className="space-y-4"
         >
@@ -52,9 +47,9 @@ export function AddFeedDialog({ slug }: { slug: string }) {
               required
             />
           </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Adding..." : "Add Feed"}
-          </Button>
+          <SubmitButton pendingText="Adding..." className="w-full">
+            Add Feed
+          </SubmitButton>
         </form>
       </DialogContent>
     </Dialog>

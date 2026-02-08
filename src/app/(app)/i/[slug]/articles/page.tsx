@@ -2,8 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveInstance } from "@/lib/instance/server";
 import { ArticleCard } from "@/modules/articles/components/article-card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { RefreshButton } from "@/components/shared/refresh-button";
 import { BookOpen } from "lucide-react";
 import { saveArticle } from "./actions";
 
@@ -26,7 +27,10 @@ export default async function ArticlesPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Articles</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold">Articles</h1>
+          <RefreshButton />
+        </div>
       </div>
 
       <form action={async (formData) => { "use server"; await saveArticle(slug, formData); }} className="flex gap-2">
@@ -37,7 +41,7 @@ export default async function ArticlesPage({
           required
           className="flex-1"
         />
-        <Button type="submit">Save Article</Button>
+        <SubmitButton pendingText="Saving...">Save Article</SubmitButton>
       </form>
 
       {articles && articles.length > 0 ? (

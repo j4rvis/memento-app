@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
-import { toggleTodo, updateTodo, deleteTodo } from "@/app/(app)/i/[slug]/todos/actions";
+import { updateTodo, deleteTodo } from "@/app/(app)/i/[slug]/todos/actions";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ interface Todo {
   is_completed: boolean;
   due_date: string | null;
   priority: number;
+  todo_projects: { id: string; name: string; color: string } | null;
 }
 
 const priorityColors: Record<number, string> = {
@@ -30,7 +32,7 @@ const priorityLabels: Record<number, string> = {
   3: "High",
 };
 
-export function TodoItem({ todo, slug }: { todo: Todo; slug: string }) {
+export function TodoItem({ todo, slug, onToggle }: { todo: Todo; slug: string; onToggle: (id: string) => void }) {
   const [isEditing, setIsEditing] = useState(false);
 
   if (isEditing) {
@@ -58,9 +60,9 @@ export function TodoItem({ todo, slug }: { todo: Todo; slug: string }) {
           defaultValue={todo.due_date ?? ""}
           className="w-36"
         />
-        <Button type="submit" size="icon" variant="ghost">
+        <SubmitButton size="icon" variant="ghost">
           <Check className="h-4 w-4" />
-        </Button>
+        </SubmitButton>
         <Button type="button" size="icon" variant="ghost" onClick={() => setIsEditing(false)}>
           <X className="h-4 w-4" />
         </Button>
@@ -77,7 +79,7 @@ export function TodoItem({ todo, slug }: { todo: Todo; slug: string }) {
       )}
     >
       <button
-        onClick={() => toggleTodo(slug, todo.id)}
+        onClick={() => onToggle(todo.id)}
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
           todo.is_completed
@@ -89,9 +91,19 @@ export function TodoItem({ todo, slug }: { todo: Todo; slug: string }) {
       </button>
 
       <div className="flex-1 min-w-0">
-        <p className={cn("font-medium", todo.is_completed && "line-through")}>
-          {todo.title}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className={cn("font-medium", todo.is_completed && "line-through")}>
+            {todo.title}
+          </p>
+          {todo.todo_projects && (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+              style={{ backgroundColor: todo.todo_projects.color }}
+            >
+              {todo.todo_projects.name}
+            </span>
+          )}
+        </div>
         {todo.description && (
           <p className="text-sm text-muted-foreground">{todo.description}</p>
         )}

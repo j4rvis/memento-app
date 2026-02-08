@@ -2,11 +2,24 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { addTodo } from "@/app/(app)/i/[slug]/todos/actions";
 import { Plus } from "lucide-react";
 
-export function AddTodoForm({ slug }: { slug: string }) {
+interface Project {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export function AddTodoForm({
+  slug,
+  projects = [],
+}: {
+  slug: string;
+  projects?: Project[];
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!isOpen) {
@@ -33,7 +46,21 @@ export function AddTodoForm({ slug }: { slug: string }) {
         autoFocus
       />
       <input type="hidden" name="priority" value="0" />
-      <Button type="submit">Add</Button>
+      {projects.length > 0 && (
+        <select
+          name="project_id"
+          className="rounded-md border bg-background px-2 py-1.5 text-sm"
+          defaultValue=""
+        >
+          <option value="">No project</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <SubmitButton>Add</SubmitButton>
       <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
         Cancel
       </Button>

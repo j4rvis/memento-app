@@ -23,12 +23,16 @@ export default async function ArticleDetailPage({
 
   if (!article) notFound();
 
-  // Mark as read
+  // Mark as read (non-blocking, best-effort)
   if (!article.is_read) {
-    await supabase
-      .from("articles")
-      .update({ is_read: true })
-      .eq("id", id);
+    try {
+      await supabase
+        .from("articles")
+        .update({ is_read: true })
+        .eq("id", id);
+    } catch {
+      // Silently ignore — viewing the article is more important than tracking read status
+    }
   }
 
   return (

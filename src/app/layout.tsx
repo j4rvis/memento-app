@@ -19,7 +19,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Memento",
   description: "Personal productivity app",
-  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

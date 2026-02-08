@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Instance, InstanceRole, InstanceSettings } from "./types";
 
-export async function resolveInstance(slug: string): Promise<{
+export const resolveInstance = cache(async function resolveInstance(slug: string): Promise<{
   instance: Instance;
   role: InstanceRole;
 }> {
@@ -34,9 +35,9 @@ export async function resolveInstance(slug: string): Promise<{
     },
     role: membership.role,
   };
-}
+});
 
-export async function getInstanceIdFromSlug(slug: string): Promise<string> {
+export const getInstanceIdFromSlug = cache(async function getInstanceIdFromSlug(slug: string): Promise<string> {
   const supabase = await createClient();
 
   const { data: instance } = await supabase
@@ -47,4 +48,4 @@ export async function getInstanceIdFromSlug(slug: string): Promise<string> {
 
   if (!instance) throw new Error("Instance not found");
   return instance.id;
-}
+});

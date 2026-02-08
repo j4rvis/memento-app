@@ -4,6 +4,7 @@ import { InstanceProvider } from "@/lib/instance/context";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import type { InstanceFeatures } from "@/lib/instance/types";
 
 export default async function InstanceLayout({
@@ -60,7 +61,8 @@ export default async function InstanceLayout({
             fullName={profile?.full_name ?? undefined}
             avatarUrl={avatarUrl}
           />
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 p-4 pb-18 md:p-6 md:pb-6">{children}</main>
+          <BottomNav slug={slug} features={features} />
         </SidebarInset>
       </SidebarProvider>
     </InstanceProvider>

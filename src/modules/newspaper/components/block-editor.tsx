@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,9 +92,9 @@ export function BlockEditor({
               className="w-full rounded-md border bg-background px-3 py-2 text-xs font-mono h-20 resize-none"
             />
           </div>
-          <Button type="submit" size="sm" variant="outline">
+          <SubmitButton size="sm" variant="outline">
             Update
-          </Button>
+          </SubmitButton>
         </form>
       </CardContent>
     </Card>

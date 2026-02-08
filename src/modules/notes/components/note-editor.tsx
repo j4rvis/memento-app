@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateNote, deleteNote, togglePin } from "@/app/(app)/i/[slug]/notes/actions";
@@ -43,10 +44,10 @@ export function NoteEditor({ note, slug }: { note: Note; slug: string }) {
         <form action={async (formData) => { await updateNote(slug, note.id, formData); }}>
           <input type="hidden" name="title" value={title} />
           <input type="hidden" name="content" value={content} />
-          <Button type="submit" size="sm">
+          <SubmitButton size="sm">
             <Save className="mr-2 h-4 w-4" />
             Save
-          </Button>
+          </SubmitButton>
         </form>
         <Button
           variant="destructive"
