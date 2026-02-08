@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Trash2, RefreshCw } from "lucide-react";
-import { deleteFeed, refreshFeed } from "@/app/(app)/feeds/actions";
+import { deleteFeed, refreshFeed } from "@/app/(app)/i/[slug]/feeds/actions";
 import { cn } from "@/lib/utils";
 
 interface Feed {
@@ -14,16 +14,16 @@ interface Feed {
   unread_count: number;
 }
 
-export function FeedList({ feeds }: { feeds: Feed[] }) {
+export function FeedList({ feeds, slug }: { feeds: Feed[]; slug: string }) {
   const pathname = usePathname();
 
   return (
     <div className="space-y-1">
       <Link
-        href="/feeds"
+        href={`/i/${slug}/feeds`}
         className={cn(
           "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent",
-          pathname === "/feeds" && "bg-accent"
+          pathname === `/i/${slug}/feeds` && "bg-accent"
         )}
       >
         All Entries
@@ -33,11 +33,11 @@ export function FeedList({ feeds }: { feeds: Feed[] }) {
           key={feed.id}
           className={cn(
             "group flex items-center rounded-md hover:bg-accent",
-            pathname === `/feeds/${feed.id}` && "bg-accent"
+            pathname === `/i/${slug}/feeds/${feed.id}` && "bg-accent"
           )}
         >
           <Link
-            href={`/feeds/${feed.id}`}
+            href={`/i/${slug}/feeds/${feed.id}`}
             className="flex flex-1 items-center gap-2 px-3 py-2 text-sm"
           >
             <span className="truncate">{feed.title}</span>
@@ -52,7 +52,7 @@ export function FeedList({ feeds }: { feeds: Feed[] }) {
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              onClick={() => refreshFeed(feed.id)}
+              onClick={() => refreshFeed(slug, feed.id)}
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
@@ -60,7 +60,7 @@ export function FeedList({ feeds }: { feeds: Feed[] }) {
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              onClick={() => deleteFeed(feed.id)}
+              onClick={() => deleteFeed(slug, feed.id)}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
-import { deleteBlock, moveBlock, updateBlock } from "@/app/(app)/newspaper/actions";
+import { deleteBlock, moveBlock, updateBlock } from "@/app/(app)/i/[slug]/newspaper/actions";
 import { useState } from "react";
 
 interface Block {
@@ -22,10 +22,12 @@ export function BlockEditor({
   block,
   isFirst,
   isLast,
+  slug,
 }: {
   block: Block;
   isFirst: boolean;
   isLast: boolean;
+  slug: string;
 }) {
   const [title, setTitle] = useState(block.title);
   const [config, setConfig] = useState(JSON.stringify(block.config, null, 2));
@@ -42,7 +44,7 @@ export function BlockEditor({
               variant="ghost"
               className="h-7 w-7"
               disabled={isFirst}
-              onClick={() => moveBlock(block.id, block.newspaper_id, "up")}
+              onClick={() => moveBlock(slug, block.id, block.newspaper_id, "up")}
             >
               <ArrowUp className="h-3.5 w-3.5" />
             </Button>
@@ -51,7 +53,7 @@ export function BlockEditor({
               variant="ghost"
               className="h-7 w-7"
               disabled={isLast}
-              onClick={() => moveBlock(block.id, block.newspaper_id, "down")}
+              onClick={() => moveBlock(slug, block.id, block.newspaper_id, "down")}
             >
               <ArrowDown className="h-3.5 w-3.5" />
             </Button>
@@ -59,7 +61,7 @@ export function BlockEditor({
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              onClick={() => deleteBlock(block.id, block.newspaper_id)}
+              onClick={() => deleteBlock(slug, block.id, block.newspaper_id)}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -68,7 +70,7 @@ export function BlockEditor({
       </CardHeader>
       <CardContent>
         <form
-          action={async (formData) => { await updateBlock(block.id, formData); }}
+          action={async (formData) => { await updateBlock(slug, block.id, formData); }}
           className="space-y-3"
         >
           <div className="space-y-1">

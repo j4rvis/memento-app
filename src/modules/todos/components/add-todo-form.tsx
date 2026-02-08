@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addTodo } from "@/app/(app)/todos/actions";
+import { addTodo } from "@/app/(app)/i/[slug]/todos/actions";
 import { Plus } from "lucide-react";
 
-export function AddTodoForm() {
+export function AddTodoForm({ slug }: { slug: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!isOpen) {
@@ -21,7 +21,7 @@ export function AddTodoForm() {
   return (
     <form
       action={async (formData) => {
-        await addTodo(formData);
+        await addTodo(slug, formData);
         setIsOpen(false);
       }}
       className="flex gap-2"

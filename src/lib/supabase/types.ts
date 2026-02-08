@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
@@ -21,6 +23,7 @@ export type Database = {
           excerpt: string | null
           id: string
           image_url: string | null
+          instance_id: string
           is_archived: boolean
           is_read: boolean
           scrape_error: string | null
@@ -40,6 +43,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           image_url?: string | null
+          instance_id: string
           is_archived?: boolean
           is_read?: boolean
           scrape_error?: string | null
@@ -59,6 +63,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           image_url?: string | null
+          instance_id?: string
           is_archived?: boolean
           is_read?: boolean
           scrape_error?: string | null
@@ -70,7 +75,15 @@ export type Database = {
           user_id?: string
           youtube_video_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "articles_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feed_entries: {
         Row: {
@@ -81,6 +94,7 @@ export type Database = {
           guid: string | null
           id: string
           image_url: string | null
+          instance_id: string
           is_read: boolean
           is_starred: boolean
           published_at: string | null
@@ -98,6 +112,7 @@ export type Database = {
           guid?: string | null
           id?: string
           image_url?: string | null
+          instance_id: string
           is_read?: boolean
           is_starred?: boolean
           published_at?: string | null
@@ -115,6 +130,7 @@ export type Database = {
           guid?: string | null
           id?: string
           image_url?: string | null
+          instance_id?: string
           is_read?: boolean
           is_starred?: boolean
           published_at?: string | null
@@ -132,6 +148,13 @@ export type Database = {
             referencedRelation: "feeds"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "feed_entries_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
         ]
       }
       feeds: {
@@ -141,6 +164,7 @@ export type Database = {
           fetch_error: string | null
           icon_url: string | null
           id: string
+          instance_id: string
           last_fetched_at: string | null
           site_url: string | null
           title: string
@@ -154,6 +178,7 @@ export type Database = {
           fetch_error?: string | null
           icon_url?: string | null
           id?: string
+          instance_id: string
           last_fetched_at?: string | null
           site_url?: string | null
           title: string
@@ -167,12 +192,86 @@ export type Database = {
           fetch_error?: string | null
           icon_url?: string | null
           id?: string
+          instance_id?: string
           last_fetched_at?: string | null
           site_url?: string | null
           title?: string
           updated_at?: string
           url?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feeds_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instance_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string
+          role: Database["public"]["Enums"]["instance_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          role?: Database["public"]["Enums"]["instance_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          role?: Database["public"]["Enums"]["instance_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_memberships_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instances: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          settings: Json
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          settings?: Json
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          settings?: Json
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -182,6 +281,7 @@ export type Database = {
           config: Json
           created_at: string
           id: string
+          instance_id: string
           newspaper_id: string
           sort_order: number
           title: string
@@ -193,6 +293,7 @@ export type Database = {
           config?: Json
           created_at?: string
           id?: string
+          instance_id: string
           newspaper_id: string
           sort_order?: number
           title?: string
@@ -204,6 +305,7 @@ export type Database = {
           config?: Json
           created_at?: string
           id?: string
+          instance_id?: string
           newspaper_id?: string
           sort_order?: number
           title?: string
@@ -211,6 +313,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "newspaper_blocks_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "newspaper_blocks_newspaper_id_fkey"
             columns: ["newspaper_id"]
@@ -225,6 +334,7 @@ export type Database = {
           content: Json
           generated_at: string
           id: string
+          instance_id: string
           newspaper_id: string
           sent_at: string | null
           sent_to_kindle: boolean
@@ -235,6 +345,7 @@ export type Database = {
           content?: Json
           generated_at?: string
           id?: string
+          instance_id: string
           newspaper_id: string
           sent_at?: string | null
           sent_to_kindle?: boolean
@@ -245,6 +356,7 @@ export type Database = {
           content?: Json
           generated_at?: string
           id?: string
+          instance_id?: string
           newspaper_id?: string
           sent_at?: string | null
           sent_to_kindle?: boolean
@@ -252,6 +364,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "newspaper_editions_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "newspaper_editions_newspaper_id_fkey"
             columns: ["newspaper_id"]
@@ -266,6 +385,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          instance_id: string
           is_default: boolean
           kindle_email: string | null
           schedule: string | null
@@ -277,6 +397,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          instance_id: string
           is_default?: boolean
           kindle_email?: string | null
           schedule?: string | null
@@ -288,6 +409,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          instance_id?: string
           is_default?: boolean
           kindle_email?: string | null
           schedule?: string | null
@@ -295,7 +417,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "newspapers_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notes: {
         Row: {
@@ -303,6 +433,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          instance_id: string
           is_pinned: boolean
           title: string
           updated_at: string
@@ -313,6 +444,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          instance_id: string
           is_pinned?: boolean
           title?: string
           updated_at?: string
@@ -323,12 +455,21 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          instance_id?: string
           is_pinned?: boolean
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notes_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -363,6 +504,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          instance_id: string
           is_completed: boolean
           priority: number
           sort_order: number
@@ -375,6 +517,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          instance_id: string
           is_completed?: boolean
           priority?: number
           sort_order?: number
@@ -387,6 +530,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          instance_id?: string
           is_completed?: boolean
           priority?: number
           sort_order?: number
@@ -394,18 +538,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "todos_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_instance_admin: { Args: { p_instance_id: string }; Returns: boolean }
+      is_instance_member: { Args: { p_instance_id: string }; Returns: boolean }
+      is_instance_owner: { Args: { p_instance_id: string }; Returns: boolean }
     }
     Enums: {
       block_type: "weather" | "rss" | "notes" | "text" | "articles" | "todos"
       content_type: "article" | "youtube" | "other"
+      instance_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -535,6 +690,7 @@ export const Constants = {
     Enums: {
       block_type: ["weather", "rss", "notes", "text", "articles", "todos"],
       content_type: ["article", "youtube", "other"],
+      instance_role: ["owner", "admin", "member"],
     },
   },
 } as const

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toggleRead, toggleArchive, deleteArticle } from "@/app/(app)/articles/actions";
+import { toggleRead, toggleArchive, deleteArticle } from "@/app/(app)/i/[slug]/articles/actions";
 import { Archive, BookOpen, ExternalLink, Trash2 } from "lucide-react";
 
 interface Article {
@@ -18,7 +18,7 @@ interface Article {
   is_archived: boolean;
 }
 
-export function ArticleReader({ article }: { article: Article }) {
+export function ArticleReader({ article, slug }: { article: Article; slug: string }) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -35,11 +35,11 @@ export function ArticleReader({ article }: { article: Article }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => toggleRead(article.id)}>
+        <Button variant="outline" size="sm" onClick={() => toggleRead(slug, article.id)}>
           <BookOpen className="mr-2 h-4 w-4" />
           {article.is_read ? "Mark Unread" : "Mark Read"}
         </Button>
-        <Button variant="outline" size="sm" onClick={() => toggleArchive(article.id)}>
+        <Button variant="outline" size="sm" onClick={() => toggleArchive(slug, article.id)}>
           <Archive className="mr-2 h-4 w-4" />
           {article.is_archived ? "Unarchive" : "Archive"}
         </Button>
@@ -49,7 +49,7 @@ export function ArticleReader({ article }: { article: Article }) {
             Original
           </a>
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => deleteArticle(article.id)}>
+        <Button variant="destructive" size="sm" onClick={() => deleteArticle(slug, article.id)}>
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </Button>

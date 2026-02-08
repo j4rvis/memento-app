@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Archive, Trash2, ExternalLink } from "lucide-react";
-import { deleteArticle, toggleArchive } from "@/app/(app)/articles/actions";
+import { deleteArticle, toggleArchive } from "@/app/(app)/i/[slug]/articles/actions";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +21,10 @@ interface Article {
   created_at: string;
 }
 
-export function ArticleCard({ article }: { article: Article }) {
+export function ArticleCard({ article, slug }: { article: Article; slug: string }) {
   return (
     <Card className={cn("group relative transition-shadow hover:shadow-md", article.is_archived && "opacity-60")}>
-      <Link href={`/articles/${article.id}`} className="absolute inset-0 z-0" />
+      <Link href={`/i/${slug}/articles/${article.id}`} className="absolute inset-0 z-0" />
       <CardHeader className="pb-2">
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
@@ -53,7 +53,7 @@ export function ArticleCard({ article }: { article: Article }) {
             size="icon"
             variant="ghost"
             className="h-7 w-7"
-            onClick={(e) => { e.preventDefault(); toggleArchive(article.id); }}
+            onClick={(e) => { e.preventDefault(); toggleArchive(slug, article.id); }}
           >
             <Archive className="h-3.5 w-3.5" />
           </Button>
@@ -61,7 +61,7 @@ export function ArticleCard({ article }: { article: Article }) {
             size="icon"
             variant="ghost"
             className="h-7 w-7"
-            onClick={(e) => { e.preventDefault(); deleteArticle(article.id); }}
+            onClick={(e) => { e.preventDefault(); deleteArticle(slug, article.id); }}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

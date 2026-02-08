@@ -12,13 +12,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Find the user's owner instance
+  const { data: membership } = await supabase
+    .from("instance_memberships")
+    .select("instance_id, role, instances(slug)")
+    .eq("user_id", user.id)
+    .eq("role", "owner")
+    .limit(1)
+    .single();
+
+  if (!membership) {
+    return NextResponse.redirect(new URL("/i", request.url));
+  }
+
+  const instanceId = membership.instance_id;
+  const instanceSlug = (membership.instances as unknown as { slug: string }).slug;
+
   const formData = await request.formData();
   const sharedUrl = (formData.get("url") as string) ||
     (formData.get("text") as string) ||
     (formData.get("title") as string);
 
   if (!sharedUrl) {
-    return NextResponse.redirect(new URL("/articles", request.url));
+    return NextResponse.redirect(new URL(`/i/${instanceSlug}/articles`, request.url));
   }
 
   // Extract URL from text that might contain a URL
@@ -54,6 +70,7 @@ export async function POST(request: NextRequest) {
 
   await supabase.from("articles").insert({
     user_id: user.id,
+    instance_id: instanceId,
     url,
     title,
     content,
@@ -66,5 +83,5 @@ export async function POST(request: NextRequest) {
     scraped_at: new Date().toISOString(),
   });
 
-  return NextResponse.redirect(new URL("/articles", request.url));
+  return NextResponse.redirect(new URL(`/i/${instanceSlug}/articles`, request.url));
 }

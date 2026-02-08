@@ -11,10 +11,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { addFeed } from "@/app/(app)/feeds/actions";
+import { addFeed } from "@/app/(app)/i/[slug]/feeds/actions";
 import { Plus } from "lucide-react";
 
-export function AddFeedDialog() {
+export function AddFeedDialog({ slug }: { slug: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +34,7 @@ export function AddFeedDialog() {
           action={async (formData) => {
             setLoading(true);
             try {
-              await addFeed(formData);
+              await addFeed(slug, formData);
               setOpen(false);
             } finally {
               setLoading(false);

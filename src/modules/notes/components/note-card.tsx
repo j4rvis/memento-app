@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pin, Trash2 } from "lucide-react";
-import { togglePin, deleteNote } from "@/app/(app)/notes/actions";
+import { togglePin, deleteNote } from "@/app/(app)/i/[slug]/notes/actions";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -15,10 +15,10 @@ interface Note {
   updated_at: string;
 }
 
-export function NoteCard({ note }: { note: Note }) {
+export function NoteCard({ note, slug }: { note: Note; slug: string }) {
   return (
     <Card className="group relative transition-shadow hover:shadow-md">
-      <Link href={`/notes/${note.id}`} className="absolute inset-0 z-0" />
+      <Link href={`/i/${slug}/notes/${note.id}`} className="absolute inset-0 z-0" />
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <CardTitle className="line-clamp-1 text-base">
@@ -31,7 +31,7 @@ export function NoteCard({ note }: { note: Note }) {
               className="h-7 w-7"
               onClick={(e) => {
                 e.preventDefault();
-                togglePin(note.id);
+                togglePin(slug, note.id);
               }}
             >
               <Pin className={cn("h-3.5 w-3.5", note.is_pinned && "fill-current")} />
@@ -42,7 +42,7 @@ export function NoteCard({ note }: { note: Note }) {
               className="h-7 w-7"
               onClick={(e) => {
                 e.preventDefault();
-                deleteNote(note.id);
+                deleteNote(slug, note.id);
               }}
             >
               <Trash2 className="h-3.5 w-3.5" />

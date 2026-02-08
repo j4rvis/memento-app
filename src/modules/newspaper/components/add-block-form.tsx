@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { addBlock } from "@/app/(app)/newspaper/actions";
+import { addBlock } from "@/app/(app)/i/[slug]/newspaper/actions";
 import { Plus } from "lucide-react";
 
 const BLOCK_TYPES = [
@@ -16,7 +16,7 @@ const BLOCK_TYPES = [
   { value: "todos", label: "Todos", defaultConfig: '{"max_items":10}' },
 ];
 
-export function AddBlockForm({ newspaperId }: { newspaperId: string }) {
+export function AddBlockForm({ newspaperId, slug }: { newspaperId: string; slug: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [blockType, setBlockType] = useState("text");
 
@@ -34,7 +34,7 @@ export function AddBlockForm({ newspaperId }: { newspaperId: string }) {
   return (
     <form
       action={async (formData) => {
-        await addBlock(newspaperId, formData);
+        await addBlock(slug, newspaperId, formData);
         setIsOpen(false);
       }}
       className="space-y-3 rounded-lg border p-4"

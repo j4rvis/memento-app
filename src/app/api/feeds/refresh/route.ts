@@ -1,20 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseFeed } from "@/modules/feeds/lib/feed-parser";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: feeds } = await supabase
-    .from("feeds")
-    .select("id, url")
-    .eq("user_id", user.id);
+  // Get instance_id from query param or refresh all user's feeds
+  const { searchParams } = new URL(request.url);
+  const instanceId = searchParams.get("instance_id");
 
-  if (!feeds) {
+  let feedQuery = supabase.from("feeds").select("id, url");
+  if (instanceId) {
+    feedQuery = feedQuery.eq("instance_id", instanceId);
+  }
+
+  const { data: feeds } = await feedQuery;
+
+  if (!feeds || feeds.length === 0) {
     return NextResponse.json({ message: "No feeds to refresh" });
   }
 
@@ -25,11 +31,21 @@ export async function POST() {
       const parsed = await parseFeed(feed.url);
       let newCount = 0;
 
+      // Get the feed's instance_id for inserting entries
+      const { data: feedData } = await supabase
+        .from("feeds")
+        .select("instance_id")
+        .eq("id", feed.id)
+        .single();
+
+      if (!feedData) continue;
+
       for (const entry of parsed.entries) {
         const { error } = await supabase.from("feed_entries").upsert(
           {
             feed_id: feed.id,
             user_id: user.id,
+            instance_id: feedData.instance_id,
             guid: entry.guid,
             title: entry.title,
             url: entry.url,

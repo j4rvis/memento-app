@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star, ExternalLink } from "lucide-react";
-import { markAsRead, toggleStar } from "@/app/(app)/feeds/actions";
+import { markAsRead, toggleStar } from "@/app/(app)/i/[slug]/feeds/actions";
 import { cn } from "@/lib/utils";
 
 interface FeedEntry {
@@ -18,7 +18,7 @@ interface FeedEntry {
   feeds?: { title: string } | null;
 }
 
-export function FeedEntryCard({ entry }: { entry: FeedEntry }) {
+export function FeedEntryCard({ entry, slug }: { entry: FeedEntry; slug: string }) {
   return (
     <Card
       className={cn(
@@ -26,7 +26,7 @@ export function FeedEntryCard({ entry }: { entry: FeedEntry }) {
         !entry.is_read && "border-l-4 border-l-primary"
       )}
       onClick={() => {
-        if (!entry.is_read) markAsRead(entry.id);
+        if (!entry.is_read) markAsRead(slug, entry.id);
       }}
     >
       <CardHeader className="pb-2">
@@ -50,7 +50,7 @@ export function FeedEntryCard({ entry }: { entry: FeedEntry }) {
               className="h-7 w-7"
               onClick={(e) => {
                 e.stopPropagation();
-                toggleStar(entry.id);
+                toggleStar(slug, entry.id);
               }}
             >
               <Star

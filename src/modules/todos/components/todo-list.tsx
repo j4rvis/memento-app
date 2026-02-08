@@ -15,7 +15,7 @@ interface Todo {
   priority: number;
 }
 
-export function TodoList({ todos }: { todos: Todo[] }) {
+export function TodoList({ todos, slug }: { todos: Todo[]; slug: string }) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const filtered = todos.filter((todo) => {
@@ -46,7 +46,7 @@ export function TodoList({ todos }: { todos: Todo[] }) {
 
       <div className="space-y-2">
         {filtered.map((todo) => (
-          <TodoItem key={todo.id} todo={todo} />
+          <TodoItem key={todo.id} todo={todo} slug={slug} />
         ))}
       </div>
     </div>

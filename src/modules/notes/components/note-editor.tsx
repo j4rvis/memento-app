@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { updateNote, deleteNote, togglePin } from "@/app/(app)/notes/actions";
+import { updateNote, deleteNote, togglePin } from "@/app/(app)/i/[slug]/notes/actions";
 import { Pin, Trash2, Save, Eye, Edit } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,7 +17,7 @@ interface Note {
   is_pinned: boolean;
 }
 
-export function NoteEditor({ note }: { note: Note }) {
+export function NoteEditor({ note, slug }: { note: Note; slug: string }) {
   const [preview, setPreview] = useState(false);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -28,7 +28,7 @@ export function NoteEditor({ note }: { note: Note }) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => togglePin(note.id)}
+          onClick={() => togglePin(slug, note.id)}
         >
           <Pin className={cn("h-4 w-4", note.is_pinned && "fill-current")} />
         </Button>
@@ -40,7 +40,7 @@ export function NoteEditor({ note }: { note: Note }) {
           {preview ? <Edit className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </Button>
         <div className="flex-1" />
-        <form action={async (formData) => { await updateNote(note.id, formData); }}>
+        <form action={async (formData) => { await updateNote(slug, note.id, formData); }}>
           <input type="hidden" name="title" value={title} />
           <input type="hidden" name="content" value={content} />
           <Button type="submit" size="sm">
@@ -51,7 +51,7 @@ export function NoteEditor({ note }: { note: Note }) {
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => deleteNote(note.id)}
+          onClick={() => deleteNote(slug, note.id)}
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete

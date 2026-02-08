@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toggleTodo, updateTodo, deleteTodo } from "@/app/(app)/todos/actions";
+import { toggleTodo, updateTodo, deleteTodo } from "@/app/(app)/i/[slug]/todos/actions";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,14 +30,14 @@ const priorityLabels: Record<number, string> = {
   3: "High",
 };
 
-export function TodoItem({ todo }: { todo: Todo }) {
+export function TodoItem({ todo, slug }: { todo: Todo; slug: string }) {
   const [isEditing, setIsEditing] = useState(false);
 
   if (isEditing) {
     return (
       <form
         action={async (formData) => {
-          await updateTodo(todo.id, formData);
+          await updateTodo(slug, todo.id, formData);
           setIsEditing(false);
         }}
         className="flex items-center gap-2 rounded-lg border p-3"
@@ -77,7 +77,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
       )}
     >
       <button
-        onClick={() => toggleTodo(todo.id)}
+        onClick={() => toggleTodo(slug, todo.id)}
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
           todo.is_completed
@@ -106,7 +106,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
         <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button size="icon" variant="ghost" onClick={() => deleteTodo(todo.id)}>
+        <Button size="icon" variant="ghost" onClick={() => deleteTodo(slug, todo.id)}>
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
