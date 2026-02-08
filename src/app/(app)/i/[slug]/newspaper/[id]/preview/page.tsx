@@ -3,7 +3,8 @@ import { resolveInstance } from "@/lib/instance/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { PrintButton } from "@/modules/newspaper/components/print-button";
 import { NewspaperPreview } from "@/modules/newspaper/components/newspaper-preview";
 
 export default async function PreviewPage({
@@ -50,26 +51,10 @@ export default async function PreviewPage({
           </Link>
         </Button>
         <div className="flex-1" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {}}
-          className="print-button"
-        >
-          <Printer className="mr-2 h-4 w-4" />
-          Print
-        </Button>
+        <PrintButton />
       </div>
 
       <NewspaperPreview edition={edition} />
-
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            document.querySelector('.print-button')?.addEventListener('click', () => window.print());
-          `,
-        }}
-      />
     </div>
   );
 }
