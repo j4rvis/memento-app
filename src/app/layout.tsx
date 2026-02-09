@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
+import { OnlineStatus } from "@/components/pwa/online-status";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +21,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Memento",
   description: "Personal productivity app",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Memento",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#006400" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({
@@ -40,6 +59,8 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
+        <ServiceWorkerRegister />
+        <OnlineStatus />
       </body>
       <SpeedInsights />
       <Analytics />
