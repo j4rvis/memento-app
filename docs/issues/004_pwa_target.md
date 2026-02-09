@@ -1,0 +1,6 @@
+- Allow memento to be a target as a PWA when sharing articles, videos whatever while on android
+- Once that happens, the app should be able to handle the share intent and open the shared content in the app.
+- Memento should create an article from the shared content and save it to the database.
+- save origins and additional infromation like title etc.
+- Is there a way to use a scrapper to fetch the information of the content? e.g. article or even the text of the youtube video?
+- Same for instagram reels

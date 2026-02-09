@@ -30,9 +30,11 @@ export function ArticleCard({ article, slug }: { article: Article; slug: string 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="secondary" className="text-xs">
-                {article.content_type}
+                {article.content_type === "other" && article.site_name
+                  ? article.site_name
+                  : article.content_type}
               </Badge>
-              {article.site_name && (
+              {article.content_type !== "other" && article.site_name && (
                 <span className="text-xs text-muted-foreground">{article.site_name}</span>
               )}
             </div>

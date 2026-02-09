@@ -10,18 +10,14 @@ export interface ScrapedArticle {
   imageUrl: string | null;
 }
 
-export async function scrapeArticle(url: string): Promise<ScrapedArticle> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; Memento/1.0)",
-    },
-  });
+export interface ScrapedMeta {
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.status}`);
-  }
-
-  const html = await response.text();
+export function parseHtml(html: string, url: string): ScrapedArticle {
   const dom = new JSDOM(html, { url });
   const reader = new Readability(dom.window.document);
   const article = reader.parse();
@@ -30,13 +26,11 @@ export async function scrapeArticle(url: string): Promise<ScrapedArticle> {
     throw new Error("Could not parse article content");
   }
 
-  // Try to extract og:image
   const metaImage = dom.window.document.querySelector(
     'meta[property="og:image"]'
   );
   const imageUrl = metaImage?.getAttribute("content") || null;
 
-  // Try to extract og:site_name
   const metaSiteName = dom.window.document.querySelector(
     'meta[property="og:site_name"]'
   );
@@ -51,4 +45,50 @@ export async function scrapeArticle(url: string): Promise<ScrapedArticle> {
     siteName,
     imageUrl,
   };
+}
+
+export async function scrapeArticle(url: string): Promise<ScrapedArticle> {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; Memento/1.0)",
+    },
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.status}`);
+  }
+
+  const html = await response.text();
+  return parseHtml(html, url);
+}
+
+export async function scrapeMetaTags(url: string): Promise<ScrapedMeta> {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; Memento/1.0)",
+    },
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.status}`);
+  }
+
+  const html = await response.text();
+  const dom = new JSDOM(html, { url });
+  const doc = dom.window.document;
+
+  const getMeta = (property: string) =>
+    doc.querySelector(`meta[property="${property}"]`)?.getAttribute("content") ||
+    doc.querySelector(`meta[name="${property}"]`)?.getAttribute("content") ||
+    null;
+
+  const title =
+    getMeta("og:title") || doc.querySelector("title")?.textContent || null;
+  const description = getMeta("og:description") || getMeta("description");
+  const imageUrl = getMeta("og:image");
+  const siteName = getMeta("og:site_name");
+
+  return { title, description, imageUrl, siteName };
 }

@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
-import { scrapeArticle } from "@/modules/articles/lib/scraper";
-import { extractYouTubeId, isYouTubeUrl } from "@/modules/articles/lib/youtube";
+import { enrichUrl } from "@/modules/articles/lib/enricher";
 
 export async function saveArticle(slug: string, formData: FormData) {
   const supabase = await createClient();
@@ -14,50 +13,36 @@ export async function saveArticle(slug: string, formData: FormData) {
 
   const instanceId = await getInstanceIdFromSlug(slug);
   const url = formData.get("url") as string;
-  const isYoutube = isYouTubeUrl(url);
-  const youtubeVideoId = isYoutube ? extractYouTubeId(url) : null;
 
-  let title = url;
-  let content = "";
-  let excerpt = "";
-  let author: string | null = null;
-  let siteName: string | null = null;
-  let imageUrl: string | null = null;
-  let scrapeError: string | null = null;
+  // Duplicate detection
+  const { data: existing } = await supabase
+    .from("articles")
+    .select("id")
+    .eq("instance_id", instanceId)
+    .eq("url", url)
+    .limit(1)
+    .maybeSingle();
 
-  if (isYoutube) {
-    title = `YouTube Video`;
-    if (youtubeVideoId) {
-      imageUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
-    }
-  } else {
-    try {
-      const scraped = await scrapeArticle(url);
-      title = scraped.title;
-      content = scraped.content;
-      excerpt = scraped.excerpt;
-      author = scraped.author;
-      siteName = scraped.siteName;
-      imageUrl = scraped.imageUrl;
-    } catch (err) {
-      scrapeError = (err as Error).message;
-    }
+  if (existing) {
+    redirect(`/i/${slug}/articles/${existing.id}`);
   }
+
+  const enriched = await enrichUrl(url);
 
   const { error } = await supabase.from("articles").insert({
     user_id: user.id,
     instance_id: instanceId,
-    url,
-    title,
-    content,
-    excerpt,
-    author,
-    site_name: siteName,
-    image_url: imageUrl,
-    content_type: isYoutube ? "youtube" : "article",
-    youtube_video_id: youtubeVideoId,
-    scraped_at: scrapeError ? null : new Date().toISOString(),
-    scrape_error: scrapeError,
+    url: enriched.url,
+    title: enriched.title,
+    content: enriched.content,
+    excerpt: enriched.excerpt,
+    author: enriched.author,
+    site_name: enriched.siteName,
+    image_url: enriched.imageUrl,
+    content_type: enriched.contentType,
+    youtube_video_id: enriched.youtubeVideoId,
+    scraped_at: enriched.scrapeError ? null : new Date().toISOString(),
+    scrape_error: enriched.scrapeError,
   });
 
   if (error) throw new Error(error.message);

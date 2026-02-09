@@ -23,8 +23,12 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">{article.content_type}</Badge>
-          {article.site_name && (
+          <Badge variant="secondary">
+            {article.content_type === "other" && article.site_name
+              ? article.site_name
+              : article.content_type}
+          </Badge>
+          {article.content_type !== "other" && article.site_name && (
             <span className="text-sm text-muted-foreground">{article.site_name}</span>
           )}
           {article.author && (

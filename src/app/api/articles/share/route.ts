@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { scrapeArticle } from "@/modules/articles/lib/scraper";
-import { extractYouTubeId, isYouTubeUrl } from "@/modules/articles/lib/youtube";
+import { enrichUrl } from "@/modules/articles/lib/enricher";
 
 // PWA Share Target handler
 export async function POST(request: NextRequest) {
@@ -29,58 +28,51 @@ export async function POST(request: NextRequest) {
   const instanceSlug = (membership.instances as unknown as { slug: string }).slug;
 
   const formData = await request.formData();
-  const sharedUrl = (formData.get("url") as string) ||
+  const sharedTitle = (formData.get("title") as string) || undefined;
+  const sharedText =
+    (formData.get("url") as string) ||
     (formData.get("text") as string) ||
     (formData.get("title") as string);
 
-  if (!sharedUrl) {
+  if (!sharedText) {
     return NextResponse.redirect(new URL(`/i/${instanceSlug}/articles`, request.url));
   }
 
-  // Extract URL from text that might contain a URL
-  const urlMatch = sharedUrl.match(/https?:\/\/[^\s]+/);
-  const url = urlMatch ? urlMatch[0] : sharedUrl;
+  // Extract URL from text that might contain a URL, strip trailing punctuation
+  const urlMatch = sharedText.match(/https?:\/\/[^\s]+/);
+  const url = urlMatch ? urlMatch[0].replace(/[.,;:!?)]+$/, "") : sharedText;
 
-  const isYoutube = isYouTubeUrl(url);
-  const youtubeVideoId = isYoutube ? extractYouTubeId(url) : null;
+  // Duplicate detection
+  const { data: existing } = await supabase
+    .from("articles")
+    .select("id")
+    .eq("instance_id", instanceId)
+    .eq("url", url)
+    .limit(1)
+    .maybeSingle();
 
-  let title = url;
-  let content = "";
-  let excerpt = "";
-  let author: string | null = null;
-  let siteName: string | null = null;
-  let imageUrl: string | null = null;
-
-  if (isYoutube && youtubeVideoId) {
-    title = "YouTube Video";
-    imageUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
-  } else {
-    try {
-      const scraped = await scrapeArticle(url);
-      title = scraped.title;
-      content = scraped.content;
-      excerpt = scraped.excerpt;
-      author = scraped.author;
-      siteName = scraped.siteName;
-      imageUrl = scraped.imageUrl;
-    } catch {
-      // Save with minimal data if scraping fails
-    }
+  if (existing) {
+    return NextResponse.redirect(
+      new URL(`/i/${instanceSlug}/articles/${existing.id}`, request.url)
+    );
   }
+
+  const enriched = await enrichUrl(url, { sharedTitle });
 
   await supabase.from("articles").insert({
     user_id: user.id,
     instance_id: instanceId,
-    url,
-    title,
-    content,
-    excerpt,
-    author,
-    site_name: siteName,
-    image_url: imageUrl,
-    content_type: isYoutube ? "youtube" : "article",
-    youtube_video_id: youtubeVideoId,
-    scraped_at: new Date().toISOString(),
+    url: enriched.url,
+    title: enriched.title,
+    content: enriched.content,
+    excerpt: enriched.excerpt,
+    author: enriched.author,
+    site_name: enriched.siteName,
+    image_url: enriched.imageUrl,
+    content_type: enriched.contentType,
+    youtube_video_id: enriched.youtubeVideoId,
+    scraped_at: enriched.scrapeError ? null : new Date().toISOString(),
+    scrape_error: enriched.scrapeError,
   });
 
   return NextResponse.redirect(new URL(`/i/${instanceSlug}/articles`, request.url));
