@@ -65,6 +65,17 @@ export async function updateArticle(slug: string, id: string, formData: FormData
   revalidatePath(`/i/${slug}/articles/${id}`);
 }
 
+export async function setArticleCategory(slug: string, id: string, category: string | null) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("articles")
+    .update({ category })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/articles`);
+  revalidatePath(`/i/${slug}/articles/${id}`);
+}
+
 export async function deleteArticle(slug: string, id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("articles").delete().eq("id", id);

@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const enriched = await enrichUrl(url, { sharedTitle });
+  const enriched = await enrichUrl(url, { sharedTitle, sharedText: sharedTitle });
 
   await supabase.from("articles").insert({
     user_id: user.id,

@@ -15,11 +15,28 @@ export interface EnrichedArticle {
   scrapeError: string | null;
 }
 
+function parseInstagramSharedText(text: string): { title: string; content: string } | null {
+  // Pattern: "Account on Instagram: "Post content here...""
+  const igMatch = text.match(
+    new RegExp('^(.+?)\\s+on\\s+Instagram:\\s*["\u201c](.+)["\u201d]$', 's')
+  );
+  if (igMatch) {
+    return { title: igMatch[1].trim(), content: igMatch[2].trim() };
+  }
+  // Fallback: split at first colon
+  const colonIdx = text.indexOf(":");
+  if (colonIdx > 0 && colonIdx < text.length - 1) {
+    return { title: text.slice(0, colonIdx).trim(), content: text.slice(colonIdx + 1).trim() };
+  }
+  return null;
+}
+
 export async function enrichUrl(
   url: string,
-  options?: { sharedTitle?: string }
+  options?: { sharedTitle?: string; sharedText?: string }
 ): Promise<EnrichedArticle> {
   const sharedTitle = options?.sharedTitle;
+  const sharedText = options?.sharedText;
 
   // YouTube
   if (isYouTubeUrl(url)) {
@@ -47,12 +64,15 @@ export async function enrichUrl(
   // Social media platforms — use lightweight meta scraping
   const platform = detectPlatform(url);
   if (platform) {
+    // Parse shared text for Instagram (e.g. "Account on Instagram: "recipe content"")
+    const parsed = sharedText ? parseInstagramSharedText(sharedText) : null;
+
     try {
       const meta = await scrapeMetaTags(url);
       return {
         url,
-        title: meta.title ?? sharedTitle ?? url,
-        content: "",
+        title: parsed?.title ?? meta.title ?? sharedTitle ?? url,
+        content: parsed?.content ?? "",
         excerpt: meta.description ?? "",
         author: null,
         siteName: meta.siteName ?? platformDisplayName(platform),
@@ -64,8 +84,8 @@ export async function enrichUrl(
     } catch {
       return {
         url,
-        title: sharedTitle ?? url,
-        content: "",
+        title: parsed?.title ?? sharedTitle ?? url,
+        content: parsed?.content ?? "",
         excerpt: "",
         author: null,
         siteName: platformDisplayName(platform),

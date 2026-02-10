@@ -12,8 +12,9 @@ import {
   toggleArchive,
   deleteArticle,
   updateArticle,
+  setArticleCategory,
 } from "@/app/(app)/i/[slug]/articles/actions";
-import { Archive, BookOpen, ExternalLink, Trash2, Edit, Eye, Save } from "lucide-react";
+import { Archive, BookOpen, ExternalLink, Trash2, Edit, Eye, Save, FolderOpen } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
 function getInstagramEmbedUrl(url: string): string | null {
@@ -127,6 +128,20 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
               Original
             </a>
           </Button>
+          <div className="flex items-center gap-1">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={article.category ?? ""}
+              onChange={(e) => setArticleCategory(slug, article.id, e.target.value || null)}
+              className="h-8 rounded-md border border-input bg-transparent px-2 text-sm"
+            >
+              <option value="">No folder</option>
+              <option value="Recipes">Recipes</option>
+              <option value="Articles">Articles</option>
+              <option value="Videos">Videos</option>
+              <option value="Links">Links</option>
+            </select>
+          </div>
           <Button type="button" variant="destructive" size="sm" onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
@@ -142,13 +157,19 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
       {editing && (
         <div className="space-y-4 mt-6">
           <div>
-            <label className="text-sm font-medium mb-1 block">Category</label>
-            <Input
+            <label className="text-sm font-medium mb-1 block">Folder</label>
+            <select
               name="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="e.g. Tech, Design, News..."
-            />
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">None</option>
+              <option value="Recipes">Recipes</option>
+              <option value="Articles">Articles</option>
+              <option value="Videos">Videos</option>
+              <option value="Links">Links</option>
+            </select>
           </div>
           <input type="hidden" name="title" value={title} />
           <div>
@@ -179,15 +200,22 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
               />
             </div>
           ) : instagramEmbedUrl ? (
-            <div className="flex justify-center">
-              <iframe
-                src={instagramEmbedUrl}
-                className="rounded-lg border-0"
-                width="400"
-                height="520"
-                loading="lazy"
-                allowFullScreen
-              />
+            <div className="space-y-6">
+              {article.content && (
+                <article className="prose dark:prose-invert max-w-none whitespace-pre-wrap">
+                  {article.content}
+                </article>
+              )}
+              <div className="flex justify-center">
+                <iframe
+                  src={instagramEmbedUrl}
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                  className="rounded-lg border-0"
+                  width="400"
+                  height="520"
+                  loading="lazy"
+                />
+              </div>
             </div>
           ) : article.content ? (
             <article
