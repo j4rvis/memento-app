@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/format";
 import { resolveInstance } from "@/lib/instance/server";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export default async function NewspaperPage({
                     {paper.description || "No description"}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Created {new Date(paper.created_at).toLocaleDateString()}
+                    Created {formatDate(paper.created_at)}
                   </p>
                 </CardContent>
               </Card>

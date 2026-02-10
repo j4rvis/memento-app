@@ -1,12 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Archive, Trash2, ExternalLink } from "lucide-react";
 import { deleteArticle, toggleArchive } from "@/app/(app)/i/[slug]/articles/actions";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 
 interface Article {
   id: string;
@@ -14,72 +15,82 @@ interface Article {
   url: string;
   excerpt: string | null;
   site_name: string | null;
-  image_url: string | null;
   content_type: string;
+  category: string | null;
   is_read: boolean;
   is_archived: boolean;
   created_at: string;
 }
 
 export function ArticleCard({ article, slug }: { article: Article; slug: string }) {
+  const contentLabel =
+    article.content_type === "other" && article.site_name
+      ? article.site_name
+      : article.content_type;
+
   return (
-    <Card className={cn("group relative transition-shadow hover:shadow-md", article.is_archived && "opacity-60")}>
+    <Card
+      className={cn(
+        "group relative transition-shadow hover:shadow-md",
+        article.is_archived && "opacity-60",
+        !article.is_read && "border-l-2 border-l-primary"
+      )}
+    >
       <Link href={`/i/${slug}/articles/${article.id}`} className="absolute inset-0 z-0" />
-      <CardHeader className="pb-2">
-        <div className="flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="secondary" className="text-xs">
-                {article.content_type === "other" && article.site_name
-                  ? article.site_name
-                  : article.content_type}
-              </Badge>
-              {article.content_type !== "other" && article.site_name && (
-                <span className="text-xs text-muted-foreground">{article.site_name}</span>
-              )}
-            </div>
-            <CardTitle className="line-clamp-2 text-base">
-              {article.title || "Untitled"}
-            </CardTitle>
-          </div>
+      <CardContent className="p-3">
+        <div className="flex items-center gap-1.5 mb-1">
+          <Badge variant="secondary" className="text-[10px] leading-tight px-1.5 py-0">
+            {contentLabel}
+          </Badge>
+          {article.category && (
+            <Badge variant="outline" className="text-[10px] leading-tight px-1.5 py-0">
+              {article.category}
+            </Badge>
+          )}
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            {formatDate(article.created_at)}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent>
+        <h3
+          className={cn(
+            "text-sm line-clamp-2 mb-1",
+            !article.is_read && "font-semibold"
+          )}
+        >
+          {article.title || "Untitled"}
+        </h3>
         {article.excerpt && (
-          <p className="line-clamp-2 text-sm text-muted-foreground mb-2">
+          <p className="line-clamp-1 text-xs text-muted-foreground mb-1.5">
             {article.excerpt}
           </p>
         )}
-        <div className="relative z-10 flex items-center gap-1">
+        <div className="relative z-10 flex items-center gap-0.5">
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={(e) => { e.preventDefault(); toggleArchive(slug, article.id); }}
           >
-            <Archive className="h-3.5 w-3.5" />
+            <Archive className="h-3 w-3" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={(e) => { e.preventDefault(); deleteArticle(slug, article.id); }}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3 w-3" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
+          <Button size="icon" variant="ghost" className="h-6 w-6" asChild>
             <a
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           </Button>
-          <span className="ml-auto text-xs text-muted-foreground">
-            {new Date(article.created_at).toLocaleDateString()}
-          </span>
         </div>
       </CardContent>
     </Card>

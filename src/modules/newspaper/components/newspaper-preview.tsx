@@ -1,6 +1,7 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
+import { formatDate } from "@/lib/format";
 
 interface EditionBlock {
   type: string;
@@ -46,7 +47,7 @@ function TodosBlock({ block }: { block: EditionBlock }) {
               <span className={todo.is_completed ? "line-through" : ""}>{todo.title}</span>
               {todo.due_date && (
                 <span className="text-xs text-muted-foreground">
-                  (due {new Date(todo.due_date).toLocaleDateString()})
+                  (due {formatDate(todo.due_date)})
                 </span>
               )}
             </li>
@@ -168,12 +169,7 @@ export function NewspaperPreview({ edition }: { edition: Edition }) {
       <div className="border-b-4 border-double border-black dark:border-foreground py-6 text-center print:border-black">
         <h1 className="text-4xl font-bold font-serif">{edition.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground print:text-gray-600">
-          {new Date(edition.generated_at).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          {formatDate(edition.generated_at)}
         </p>
       </div>
 

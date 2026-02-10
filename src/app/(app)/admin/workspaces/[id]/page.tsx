@@ -1,4 +1,5 @@
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/format";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export default async function AdminWorkspaceDetailPage({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">ID:</span> {instance.id}</div>
-            <div><span className="text-muted-foreground">Created:</span> {new Date(instance.created_at).toLocaleString()}</div>
+            <div><span className="text-muted-foreground">Created:</span> {formatDate(instance.created_at)}</div>
             <div><span className="text-muted-foreground">Settings:</span> <pre className="mt-1 rounded bg-muted p-2 text-xs overflow-auto">{JSON.stringify(instance.settings, null, 2)}</pre></div>
           </CardContent>
         </Card>
@@ -122,7 +123,7 @@ export default async function AdminWorkspaceDetailPage({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {new Date(m.created_at).toLocaleDateString()}
+                    {formatDate(m.created_at)}
                   </TableCell>
                 </TableRow>
               ))}

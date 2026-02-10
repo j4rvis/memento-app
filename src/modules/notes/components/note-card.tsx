@@ -6,6 +6,7 @@ import { Pin, Trash2 } from "lucide-react";
 import { togglePin, deleteNote } from "@/app/(app)/i/[slug]/notes/actions";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 
 interface Note {
   id: string;
@@ -55,7 +56,7 @@ export function NoteCard({ note, slug }: { note: Note; slug: string }) {
           {note.content || "Empty note"}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          {new Date(note.updated_at).toLocaleDateString()}
+          {formatDate(note.updated_at)}
         </p>
       </CardContent>
     </Card>

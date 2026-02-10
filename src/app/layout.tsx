@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import { OnlineStatus } from "@/components/pwa/online-status";
+import { InstallBanner } from "@/components/pwa/install-banner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,6 +62,7 @@ export default function RootLayout({
         </ThemeProvider>
         <ServiceWorkerRegister />
         <OnlineStatus />
+        <InstallBanner />
       </body>
       <SpeedInsights />
       <Analytics />

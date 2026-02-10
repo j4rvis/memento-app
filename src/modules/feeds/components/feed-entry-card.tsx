@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, ExternalLink } from "lucide-react";
 import { markAsRead, toggleStar } from "@/app/(app)/i/[slug]/feeds/actions";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 
 interface FeedEntry {
   id: string;
@@ -39,7 +40,7 @@ export function FeedEntryCard({ entry, slug }: { entry: FeedEntry; slug: string 
               {entry.feeds?.title && <span>{entry.feeds.title}</span>}
               {entry.author && <span>by {entry.author}</span>}
               {entry.published_at && (
-                <span>{new Date(entry.published_at).toLocaleDateString()}</span>
+                <span>{formatDate(entry.published_at)}</span>
               )}
             </div>
           </div>

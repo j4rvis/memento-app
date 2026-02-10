@@ -49,12 +49,27 @@ export async function saveArticle(slug: string, formData: FormData) {
   revalidatePath(`/i/${slug}/articles`);
 }
 
+export async function updateArticle(slug: string, id: string, formData: FormData) {
+  const supabase = await createClient();
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const category = (formData.get("category") as string)?.trim() || null;
+
+  const { error } = await supabase
+    .from("articles")
+    .update({ title: title || null, content: content || null, category })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/articles`);
+  revalidatePath(`/i/${slug}/articles/${id}`);
+}
+
 export async function deleteArticle(slug: string, id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("articles").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/articles`);
-  redirect(`/i/${slug}/articles`);
 }
 
 export async function toggleRead(slug: string, id: string) {

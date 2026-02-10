@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { updateTodo, deleteTodo } from "@/app/(app)/i/[slug]/todos/actions";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 
 interface Todo {
   id: string;
@@ -109,7 +110,7 @@ export function TodoItem({ todo, slug, onToggle }: { todo: Todo; slug: string; o
         )}
         {todo.due_date && (
           <p className="text-xs text-muted-foreground">
-            Due: {new Date(todo.due_date).toLocaleDateString()}
+            Due: {formatDate(todo.due_date)}
           </p>
         )}
       </div>

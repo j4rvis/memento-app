@@ -244,12 +244,8 @@ export async function generateEdition(slug: string, newspaperId: string) {
     content.push(blockContent);
   }
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const now = new Date();
+  const today = `${now.getDate().toString().padStart(2, "0")}.${(now.getMonth() + 1).toString().padStart(2, "0")}.${now.getFullYear()}`;
 
   const { data: edition, error } = await supabase
     .from("newspaper_editions")

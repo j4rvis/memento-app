@@ -1,0 +1,7 @@
+- allow editing articles including title and content
+- deleting an article should update the list view
+- allows having categories for articles
+- mark articles as read or unread (default unread)
+- all the dates should be formatted as DD.MM.YYYY
+- is it possible to show instagram posts in the app? as an iFrame or smth?
+- reduce the size of the cards of the articles

@@ -1,4 +1,5 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/format";
 import Link from "next/link";
 import {
   Table,
@@ -63,7 +64,7 @@ export default async function AdminWorkspacesPage() {
               <TableCell>{inst.owner_name}</TableCell>
               <TableCell>{inst.member_count}</TableCell>
               <TableCell className="text-muted-foreground">
-                {new Date(inst.created_at).toLocaleDateString()}
+                {formatDate(inst.created_at)}
               </TableCell>
               <TableCell>
                 <Button variant="ghost" size="sm" asChild>
