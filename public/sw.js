@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `memento-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `memento-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -30,6 +30,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Handle PWA share target POST — forward to server
+  if (request.method === "POST" && url.pathname === "/api/articles/share") {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Skip non-GET requests (server actions, form submissions)
   if (request.method !== "GET") return;
