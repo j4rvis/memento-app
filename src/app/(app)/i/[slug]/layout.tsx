@@ -20,21 +20,21 @@ export default async function InstanceLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url")
-    .eq("id", user!.id)
-    .single();
+  const [{ data: profile }, { data: memberships }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user!.id)
+      .single(),
+    supabase
+      .from("instance_memberships")
+      .select("role, instances(id, name, slug)")
+      .eq("user_id", user!.id),
+  ]);
 
   const avatarUrl = profile?.avatar_url
     ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_url).data.publicUrl
     : undefined;
-
-  // Fetch all user memberships for instance switcher
-  const { data: memberships } = await supabase
-    .from("instance_memberships")
-    .select("role, instances(id, name, slug)")
-    .eq("user_id", user!.id);
 
   const instances = (memberships || [])
     .map((m) => ({

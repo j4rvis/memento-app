@@ -1,13 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { resolveInstance } from "@/lib/instance/server";
-import { FeedList } from "@/modules/feeds/components/feed-list";
-import { FeedEntryCard } from "@/modules/feeds/components/feed-entry-card";
-import { AddFeedDialog } from "@/modules/feeds/components/add-feed-dialog";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
-import { RefreshButton } from "@/components/shared/refresh-button";
-import { Rss } from "lucide-react";
-import { markAllAsRead } from "./actions";
+import { FeedsPageClient } from "@/modules/feeds/components/feeds-page-client";
 
 export default async function FeedsPage({
   params,
@@ -24,16 +17,25 @@ export default async function FeedsPage({
     .eq("instance_id", instance.id)
     .order("title");
 
-  const feedsWithCounts = await Promise.all(
-    (feeds || []).map(async (feed) => {
-      const { count } = await supabase
+  // Fix N+1: single query for all unread counts instead of per-feed queries
+  const feedIds = (feeds || []).map((f) => f.id);
+  const unreadEntries = feedIds.length > 0
+    ? (await supabase
         .from("feed_entries")
-        .select("*", { count: "exact", head: true })
-        .eq("feed_id", feed.id)
-        .eq("is_read", false);
-      return { ...feed, unread_count: count || 0 };
-    })
-  );
+        .select("feed_id")
+        .in("feed_id", feedIds)
+        .eq("is_read", false)).data
+    : [];
+
+  const countMap = new Map<string, number>();
+  for (const entry of unreadEntries || []) {
+    countMap.set(entry.feed_id, (countMap.get(entry.feed_id) || 0) + 1);
+  }
+
+  const feedsWithCounts = (feeds || []).map((feed) => ({
+    ...feed,
+    unread_count: countMap.get(feed.id) || 0,
+  }));
 
   const { data: entries } = await supabase
     .from("feed_entries")
@@ -43,55 +45,9 @@ export default async function FeedsPage({
     .limit(50);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold">Feeds</h1>
-          <RefreshButton />
-        </div>
-        <AddFeedDialog slug={slug} />
-      </div>
-
-      {feeds && feeds.length > 0 ? (
-        <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
-          <aside className="space-y-4">
-            <FeedList feeds={feedsWithCounts} slug={slug} />
-          </aside>
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <form action={async () => {
-                "use server";
-                for (const feed of feeds) {
-                  await markAllAsRead(slug, feed.id);
-                }
-              }}>
-                <Button variant="outline" size="sm" type="submit">
-                  Mark All Read
-                </Button>
-              </form>
-            </div>
-            {entries && entries.length > 0 ? (
-              <div className="space-y-3">
-                {entries.map((entry) => (
-                  <FeedEntryCard key={entry.id} entry={entry} slug={slug} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                icon={Rss}
-                title="No entries"
-                description="Your feeds are empty. Try refreshing them."
-              />
-            )}
-          </div>
-        </div>
-      ) : (
-        <EmptyState
-          icon={Rss}
-          title="No feeds yet"
-          description="Add your first RSS feed to start reading."
-        />
-      )}
-    </div>
+    <FeedsPageClient
+      initialFeeds={feedsWithCounts}
+      initialEntries={entries ?? []}
+    />
   );
 }

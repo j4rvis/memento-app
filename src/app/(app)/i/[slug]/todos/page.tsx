@@ -1,12 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { resolveInstance } from "@/lib/instance/server";
-import { TodoList } from "@/modules/todos/components/todo-list";
-import { AddTodoForm } from "@/modules/todos/components/add-todo-form";
-import { ProjectManager } from "@/modules/todos/components/project-manager";
-import { ProjectFilter } from "@/modules/todos/components/project-filter";
-import { EmptyState } from "@/components/shared/empty-state";
-import { RefreshButton } from "@/components/shared/refresh-button";
-import { CheckSquare } from "lucide-react";
+import { TodosPageClient } from "@/modules/todos/components/todos-page-client";
 
 export default async function TodosPage({
   params,
@@ -41,24 +35,10 @@ export default async function TodosPage({
   const { data: todos } = await todosQuery;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-2">
-        <h1 className="text-3xl font-bold">Todos</h1>
-        <RefreshButton />
-        <div className="flex-1" />
-        <ProjectManager projects={projects ?? []} slug={slug} />
-      </div>
-      <ProjectFilter projects={projects ?? []} activeProject={projectFilter} slug={slug} />
-      <AddTodoForm slug={slug} projects={projects ?? []} />
-      {todos && todos.length > 0 ? (
-        <TodoList todos={todos} slug={slug} />
-      ) : (
-        <EmptyState
-          icon={CheckSquare}
-          title="No todos yet"
-          description="Add your first todo to get started."
-        />
-      )}
-    </div>
+    <TodosPageClient
+      initialTodos={todos ?? []}
+      initialProjects={projects ?? []}
+      projectFilter={projectFilter}
+    />
   );
 }

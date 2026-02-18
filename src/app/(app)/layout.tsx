@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { QueryProvider } from "@/lib/query/provider";
 
 export default async function AppLayout({
   children,
@@ -13,5 +14,5 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  return <>{children}</>;
+  return <QueryProvider>{children}</QueryProvider>;
 }
