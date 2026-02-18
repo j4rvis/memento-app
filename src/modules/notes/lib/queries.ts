@@ -11,3 +11,14 @@ export async function fetchNotes(instanceId: string) {
   if (error) throw error;
   return data;
 }
+
+export async function fetchNoteFolders(instanceId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("note_folders")
+    .select("*")
+    .eq("instance_id", instanceId)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data;
+}

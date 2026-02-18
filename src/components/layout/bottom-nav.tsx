@@ -16,7 +16,7 @@ const moduleItems = [
   { key: "todos" as const, title: "Todos", path: "todos", icon: CheckSquare },
   { key: "notes" as const, title: "Notes", path: "notes", icon: StickyNote },
   { key: "feeds" as const, title: "Feeds", path: "feeds", icon: Rss },
-  { key: "articles" as const, title: "Articles", path: "articles", icon: BookOpen },
+  { key: "articles" as const, title: "Bookmarks", path: "articles", icon: BookOpen },
   { key: "newspaper" as const, title: "Paper", path: "newspaper", icon: Newspaper },
 ];
 

@@ -12,10 +12,12 @@ import {
   toggleArchive,
   deleteArticle,
   updateArticle,
-  setArticleCategory,
+  setArticleTag,
 } from "@/app/(app)/i/[slug]/articles/actions";
-import { Archive, BookOpen, ExternalLink, Trash2, Edit, Eye, Save, FolderOpen } from "lucide-react";
+import { Archive, BookOpen, ExternalLink, Trash2, Edit, Eye, Save, Tag } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import { useArticleTags } from "../lib/hooks";
+import type { ArticleTag } from "../lib/types";
 
 function getInstagramEmbedUrl(url: string): string | null {
   const match = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
@@ -31,21 +33,34 @@ interface Article {
   author: string | null;
   site_name: string | null;
   content_type: string;
-  category: string | null;
+  tag_id: string | null;
   youtube_video_id: string | null;
   is_read: boolean;
   is_archived: boolean;
   created_at: string;
 }
 
-export function ArticleReader({ article, slug }: { article: Article; slug: string }) {
+export function ArticleReader({
+  article,
+  slug,
+  initialTags,
+}: {
+  article: Article;
+  slug: string;
+  initialTags: ArticleTag[];
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(article.title ?? "");
   const [content, setContent] = useState(article.content ?? "");
-  const [category, setCategory] = useState(article.category ?? "");
+  const [tagId, setTagId] = useState(article.tag_id ?? "");
+
+  const { data: tagsData } = useArticleTags(initialTags);
+  const tags = tagsData ?? initialTags;
 
   const instagramEmbedUrl = getInstagramEmbedUrl(article.url);
+
+  const currentTag = tags.find((t) => t.id === article.tag_id);
 
   const handleDelete = async () => {
     await deleteArticle(slug, article.id);
@@ -62,8 +77,8 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
               ? article.site_name
               : article.content_type}
           </Badge>
-          {article.category && (
-            <Badge variant="outline">{article.category}</Badge>
+          {currentTag && (
+            <Badge variant="outline">{currentTag.name}</Badge>
           )}
           {article.content_type !== "other" && article.site_name && (
             <span className="text-sm text-muted-foreground">{article.site_name}</span>
@@ -80,7 +95,7 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Article title"
+            placeholder="Bookmark title"
             className="text-2xl font-bold"
           />
         ) : (
@@ -129,17 +144,16 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
             </a>
           </Button>
           <div className="flex items-center gap-1">
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <Tag className="h-4 w-4 text-muted-foreground" />
             <select
-              value={article.category ?? ""}
-              onChange={(e) => setArticleCategory(slug, article.id, e.target.value || null)}
+              value={article.tag_id ?? ""}
+              onChange={(e) => setArticleTag(slug, article.id, e.target.value || null)}
               className="h-8 rounded-md border border-input bg-transparent px-2 text-sm"
             >
-              <option value="">No folder</option>
-              <option value="Recipes">Recipes</option>
-              <option value="Articles">Articles</option>
-              <option value="Videos">Videos</option>
-              <option value="Links">Links</option>
+              <option value="">No tag</option>
+              {tags.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
             </select>
           </div>
           <Button type="button" variant="destructive" size="sm" onClick={handleDelete}>
@@ -154,36 +168,35 @@ export function ArticleReader({ article, slug }: { article: Article; slug: strin
           )}
         </div>
 
-      {editing && (
-        <div className="space-y-4 mt-6">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Folder</label>
-            <select
-              name="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="">None</option>
-              <option value="Recipes">Recipes</option>
-              <option value="Articles">Articles</option>
-              <option value="Videos">Videos</option>
-              <option value="Links">Links</option>
-            </select>
+        {editing && (
+          <div className="space-y-4 mt-6">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Tag</label>
+              <select
+                name="tag_id"
+                value={tagId}
+                onChange={(e) => setTagId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">None</option>
+                {tags.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+            <input type="hidden" name="title" value={title} />
+            <div>
+              <label className="text-sm font-medium mb-1 block">Content (HTML)</label>
+              <Textarea
+                name="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Article content..."
+                className="min-h-[300px] font-mono text-sm"
+              />
+            </div>
           </div>
-          <input type="hidden" name="title" value={title} />
-          <div>
-            <label className="text-sm font-medium mb-1 block">Content (HTML)</label>
-            <Textarea
-              name="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Article content..."
-              className="min-h-[300px] font-mono text-sm"
-            />
-          </div>
-        </div>
-      )}
+        )}
       </form>
 
       {/* Content display */}

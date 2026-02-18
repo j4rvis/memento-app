@@ -12,14 +12,17 @@ export default async function ArticleDetailPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  await resolveInstance(slug);
+  const { instance } = await resolveInstance(slug);
   const supabase = await createClient();
 
-  const { data: article } = await supabase
-    .from("articles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [{ data: article }, { data: tags }] = await Promise.all([
+    supabase.from("articles").select("*").eq("id", id).single(),
+    supabase
+      .from("article_tags")
+      .select("*")
+      .eq("instance_id", instance.id)
+      .order("name", { ascending: true }),
+  ]);
 
   if (!article) notFound();
 
@@ -43,7 +46,7 @@ export default async function ArticleDetailPage({
           Back to Articles
         </Link>
       </Button>
-      <ArticleReader article={article} slug={slug} />
+      <ArticleReader article={article} slug={slug} initialTags={tags ?? []} />
     </div>
   );
 }

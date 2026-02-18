@@ -53,11 +53,11 @@ export async function updateArticle(slug: string, id: string, formData: FormData
   const supabase = await createClient();
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
-  const category = (formData.get("category") as string)?.trim() || null;
+  const tagId = (formData.get("tag_id") as string)?.trim() || null;
 
   const { error } = await supabase
     .from("articles")
-    .update({ title: title || null, content: content || null, category })
+    .update({ title: title || null, content: content || null, tag_id: tagId })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
@@ -65,11 +65,11 @@ export async function updateArticle(slug: string, id: string, formData: FormData
   revalidatePath(`/i/${slug}/articles/${id}`);
 }
 
-export async function setArticleCategory(slug: string, id: string, category: string | null) {
+export async function setArticleTag(slug: string, id: string, tagId: string | null) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("articles")
-    .update({ category })
+    .update({ tag_id: tagId })
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/articles`);
@@ -119,6 +119,46 @@ export async function toggleArchive(slug: string, id: string) {
     .update({ is_archived: !article.is_archived })
     .eq("id", id);
 
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/articles`);
+}
+
+// ─── Article Tags CRUD ────────────────────────────────────────────────────────
+
+export async function createTag(slug: string, name: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const instanceId = await getInstanceIdFromSlug(slug);
+
+  const { data, error } = await supabase
+    .from("article_tags")
+    .insert({ name, instance_id: instanceId, user_id: user.id })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/articles`);
+  return data.id as string;
+}
+
+export async function renameTag(slug: string, id: string, name: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("article_tags")
+    .update({ name })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/articles`);
+}
+
+export async function deleteTag(slug: string, id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("article_tags")
+    .delete()
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/articles`);
 }

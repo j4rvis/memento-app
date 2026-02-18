@@ -14,6 +14,7 @@ export const queryKeys = {
     list: (instanceId: string) => ["notes", instanceId, "list"] as const,
     detail: (instanceId: string, noteId: string) =>
       ["notes", instanceId, "detail", noteId] as const,
+    folders: (instanceId: string) => ["notes", instanceId, "folders"] as const,
   },
 
   feeds: {
@@ -27,10 +28,11 @@ export const queryKeys = {
 
   articles: {
     all: (instanceId: string) => ["articles", instanceId] as const,
-    list: (instanceId: string, category?: string) =>
-      ["articles", instanceId, "list", { category }] as const,
+    list: (instanceId: string, tagId?: string) =>
+      ["articles", instanceId, "list", { tagId }] as const,
     counts: (instanceId: string) =>
       ["articles", instanceId, "counts"] as const,
+    tags: (instanceId: string) => ["articles", instanceId, "tags"] as const,
   },
 
   newspapers: {

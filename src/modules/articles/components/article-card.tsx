@@ -1,5 +1,6 @@
 "use client";
 
+import { useDraggable } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +17,25 @@ interface Article {
   excerpt: string | null;
   site_name: string | null;
   content_type: string;
-  category: string | null;
+  tag_id: string | null;
   is_read: boolean;
   is_archived: boolean;
   created_at: string;
 }
 
-export function ArticleCard({ article, slug }: { article: Article; slug: string }) {
+export function ArticleCard({
+  article,
+  slug,
+  tagName,
+}: {
+  article: Article;
+  slug: string;
+  tagName?: string;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: article.id,
+  });
+
   const contentLabel =
     article.content_type === "other" && article.site_name
       ? article.site_name
@@ -30,21 +43,28 @@ export function ArticleCard({ article, slug }: { article: Article; slug: string 
 
   return (
     <Card
+      ref={setNodeRef}
       className={cn(
-        "group relative transition-shadow hover:shadow-md",
+        "group relative transition-shadow hover:shadow-md cursor-grab active:cursor-grabbing",
         article.is_archived && "opacity-60",
-        !article.is_read && "border-l-2 border-l-primary"
+        !article.is_read && "border-l-2 border-l-primary",
+        isDragging && "opacity-40 shadow-none",
       )}
+      {...listeners}
+      {...attributes}
     >
-      <Link href={`/i/${slug}/articles/${article.id}`} className="absolute inset-0 z-0" />
+      {/* Only navigate if not dragging */}
+      {!isDragging && (
+        <Link href={`/i/${slug}/articles/${article.id}`} className="absolute inset-0 z-0" />
+      )}
       <CardContent className="p-3">
         <div className="flex items-center gap-1.5 mb-1">
           <Badge variant="secondary" className="text-[10px] leading-tight px-1.5 py-0">
             {contentLabel}
           </Badge>
-          {article.category && (
+          {tagName && (
             <Badge variant="outline" className="text-[10px] leading-tight px-1.5 py-0">
-              {article.category}
+              {tagName}
             </Badge>
           )}
           <span className="ml-auto text-[10px] text-muted-foreground">
