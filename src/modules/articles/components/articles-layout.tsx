@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -19,25 +19,35 @@ import { setArticleTag } from "@/app/(app)/i/[slug]/articles/actions";
 import { useArticles, useArticleTags } from "../lib/hooks";
 import { TagsPanel } from "./tags-panel";
 import { ArticlesListPanel } from "./articles-list-panel";
+import { ArticleContentPanel } from "./article-content-panel";
 import type { Article, ArticleTag } from "../lib/types";
 
 interface ArticlesLayoutProps {
   initialArticles: Article[];
   initialTags: ArticleTag[];
+  initialArticleId?: string | null;
+  initialTagParam?: string | null;
 }
 
 export function ArticlesLayout({
   initialArticles,
   initialTags,
+  initialArticleId,
+  initialTagParam,
 }: ArticlesLayoutProps) {
   const { instance, slug } = useInstance();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
 
-  // No param → "inbox" (default), "all" → null (all bookmarks), uuid → specific tag
-  const rawTag = searchParams.get("tag");
-  const selectedTagId: string | null = rawTag === null ? "inbox" : rawTag === "all" ? null : rawTag;
+  // Derive selectedTagId from the raw tag param
+  // no param → "inbox", "all" → null (all bookmarks), uuid → specific tag
+  const [tagParam, setTagParam] = useState<string | null>(initialTagParam ?? null);
+  const selectedTagId: string | null =
+    tagParam === null ? "inbox" : tagParam === "all" ? null : tagParam;
+
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
+    initialArticleId ?? null,
+  );
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
 
   const { data: tagsData } = useArticleTags(initialTags);
@@ -46,14 +56,36 @@ export function ArticlesLayout({
   const { data: articlesData } = useArticles(initialArticles as unknown[]);
   const articles = (articlesData ?? initialArticles) as Article[];
 
-  const handleSelectTag = useCallback((id: string | null) => {
+  const selectedArticle = selectedArticleId
+    ? (articles.find((a) => a.id === selectedArticleId) ?? null)
+    : null;
+
+  // Keep URL in sync with state
+  useEffect(() => {
     const params = new URLSearchParams();
-    if (id === null) params.set("tag", "all");       // null = All Bookmarks → ?tag=all
-    else if (id !== "inbox") params.set("tag", id);  // uuid = specific tag
-    // id === "inbox" → no param (default inbox)
+    if (tagParam === "all") params.set("tag", "all");
+    else if (tagParam) params.set("tag", tagParam);
+    if (selectedArticleId) params.set("article", selectedArticleId);
     const query = params.toString();
     router.replace(`/i/${slug}/articles${query ? `?${query}` : ""}`);
-  }, [slug, router]);
+  }, [selectedArticleId, tagParam, slug, router]);
+
+  const handleSelectTag = useCallback((id: string | null) => {
+    // "inbox" → null tagParam, null → "all", uuid → uuid
+    const newTagParam = id === "inbox" ? null : id === null ? "all" : id;
+    setTagParam(newTagParam);
+    setSelectedArticleId(null);
+  }, []);
+
+  const handleSelectArticle = useCallback((id: string) => {
+    setSelectedArticleId(id);
+  }, []);
+
+  const handleArticleGone = useCallback((id: string) => {
+    if (selectedArticleId === id) {
+      setSelectedArticleId(null);
+    }
+  }, [selectedArticleId]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
@@ -77,7 +109,7 @@ export function ArticlesLayout({
       const articleId = active.id as string;
       const dropId = over.id as string;
       // "remove-tag" (All Bookmarks) and "inbox" both clear the tag
-      const newTagId = (dropId === "remove-tag" || dropId === "inbox") ? null : dropId;
+      const newTagId = dropId === "remove-tag" || dropId === "inbox" ? null : dropId;
 
       // Optimistic update — triggers re-filter immediately
       queryClient.setQueryData(
@@ -106,12 +138,21 @@ export function ArticlesLayout({
         <ArticlesListPanel
           articles={articles}
           selectedTagId={selectedTagId}
+          selectedArticleId={selectedArticleId}
           tags={tags}
           onSelectTag={handleSelectTag}
+          onSelectArticle={handleSelectArticle}
+        />
+        <ArticleContentPanel
+          article={selectedArticle}
+          tags={tags}
+          onBack={() => setSelectedArticleId(null)}
+          onArticleGone={handleArticleGone}
+          slug={slug}
         />
       </div>
 
-      {/* Floating drag preview — snaps center to cursor */}
+      {/* Floating drag preview */}
       <DragOverlay modifiers={[snapCenterToCursor]}>
         {activeArticle ? (
           <div className="rounded-md border bg-card px-3 py-2 shadow-lg text-sm font-medium max-w-[200px] truncate opacity-90 pointer-events-none">

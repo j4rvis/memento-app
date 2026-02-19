@@ -24,7 +24,7 @@ export async function saveArticle(slug: string, formData: FormData) {
     .maybeSingle();
 
   if (existing) {
-    redirect(`/i/${slug}/articles/${existing.id}`);
+    redirect(`/i/${slug}/articles?article=${existing.id}`);
   }
 
   const enriched = await enrichUrl(url);

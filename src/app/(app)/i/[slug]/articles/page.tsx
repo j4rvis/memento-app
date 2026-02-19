@@ -5,10 +5,13 @@ import { ArticlesLayout } from "@/modules/articles/components/articles-layout";
 
 export default async function ArticlesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ article?: string; tag?: string }>;
 }) {
   const { slug } = await params;
+  const { article: initialArticleId, tag: initialTagParam } = await searchParams;
   const { instance } = await resolveInstance(slug);
   const supabase = await createClient();
 
@@ -31,6 +34,8 @@ export default async function ArticlesPage({
       <ArticlesLayout
         initialArticles={articles ?? []}
         initialTags={tags ?? []}
+        initialArticleId={initialArticleId ?? null}
+        initialTagParam={initialTagParam ?? null}
       />
     </Suspense>
   );

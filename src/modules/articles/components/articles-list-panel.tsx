@@ -3,25 +3,29 @@
 import { BookOpen, Inbox } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { RefreshButton } from "@/components/shared/refresh-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { saveArticle } from "@/app/(app)/i/[slug]/articles/actions";
 import { useInstanceSlug } from "@/lib/instance/context";
-import { ArticleCard } from "./article-card";
+import { cn } from "@/lib/utils";
+import { ArticleListItem } from "./article-list-item";
 import type { Article, ArticleTag } from "../lib/types";
 
 interface ArticlesListPanelProps {
   articles: Article[];
   selectedTagId: string | null;
+  selectedArticleId: string | null;
   tags: ArticleTag[];
   onSelectTag: (id: string | null) => void;
+  onSelectArticle: (id: string) => void;
 }
 
 export function ArticlesListPanel({
   articles,
   selectedTagId,
+  selectedArticleId,
   tags,
   onSelectTag,
+  onSelectArticle,
 }: ArticlesListPanelProps) {
   const slug = useInstanceSlug();
 
@@ -40,22 +44,22 @@ export function ArticlesListPanel({
       : "All Bookmarks";
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div
+      className={cn(
+        "border-r flex flex-col overflow-hidden",
+        selectedArticleId
+          ? "hidden md:flex md:w-[260px] md:shrink-0"
+          : "flex-1 md:flex md:w-[260px] md:flex-none md:shrink-0",
+      )}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold truncate">
-            {currentTagName}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            ({filtered.length})
-          </span>
-        </div>
-        <RefreshButton />
+      <div className="flex items-center gap-2 px-3 py-2 border-b shrink-0">
+        <span className="text-sm font-semibold truncate flex-1">{currentTagName}</span>
+        <span className="text-xs text-muted-foreground shrink-0">({filtered.length})</span>
       </div>
 
       {/* Mobile tag selector */}
-      <div className="md:hidden px-4 py-2 border-b shrink-0">
+      <div className="md:hidden px-3 py-1.5 border-b shrink-0">
         <select
           className="w-full text-sm bg-background border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-ring"
           value={selectedTagId ?? ""}
@@ -71,43 +75,23 @@ export function ArticlesListPanel({
         </select>
       </div>
 
-      {/* Save URL form */}
-      <div className="px-4 py-3 border-b shrink-0">
-        <form
-          action={async (formData) => {
-            await saveArticle(slug, formData);
-          }}
-          className="flex gap-2"
-        >
-          <Input
-            name="url"
-            type="url"
-            placeholder="Paste a URL to bookmark..."
-            required
-            className="flex-1"
-          />
-          <SubmitButton pendingText="Saving...">Save</SubmitButton>
-        </form>
-      </div>
-
-      {/* Article grid */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Article list */}
+      <div className="flex-1 overflow-y-auto">
         {filtered.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((article) => {
-              const tagName = article.tag_id
-                ? (tags.find((t) => t.id === article.tag_id)?.name ?? undefined)
-                : undefined;
-              return (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  slug={slug}
-                  tagName={tagName}
-                />
-              );
-            })}
-          </div>
+          filtered.map((article) => {
+            const tagName = article.tag_id
+              ? (tags.find((t) => t.id === article.tag_id)?.name ?? undefined)
+              : undefined;
+            return (
+              <ArticleListItem
+                key={article.id}
+                article={article}
+                tagName={tagName}
+                isSelected={selectedArticleId === article.id}
+                onSelect={onSelectArticle}
+              />
+            );
+          })
         ) : (
           <EmptyState
             icon={isInbox ? Inbox : BookOpen}
@@ -123,10 +107,31 @@ export function ArticlesListPanel({
                 ? "Drag a bookmark here to remove its tag, or all bookmarks already have tags."
                 : selectedTagId
                   ? `Drag a bookmark onto "${currentTagName}" in the tag panel to add it here.`
-                  : "Save your first bookmark by pasting a URL above."
+                  : "Save your first bookmark by pasting a URL below."
             }
           />
         )}
+      </div>
+
+      {/* Save URL form — pinned at bottom */}
+      <div className="px-3 py-2 border-t shrink-0">
+        <form
+          action={async (formData) => {
+            await saveArticle(slug, formData);
+          }}
+          className="flex gap-1.5"
+        >
+          <Input
+            name="url"
+            type="url"
+            placeholder="Paste URL to save..."
+            required
+            className="flex-1 h-8 text-xs"
+          />
+          <SubmitButton pendingText="..." size="sm" className="h-8 text-xs shrink-0">
+            Save
+          </SubmitButton>
+        </form>
       </div>
     </div>
   );
