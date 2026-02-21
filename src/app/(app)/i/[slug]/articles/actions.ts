@@ -6,6 +6,57 @@ import { createClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
 import { enrichUrl } from "@/modules/articles/lib/enricher";
 
+export async function saveArticleFromShare(
+  slug: string,
+  shareData: { url: string; title?: string; text?: string }
+): Promise<{ success: boolean; articleId?: string; duplicate?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
+  const instanceId = await getInstanceIdFromSlug(slug);
+
+  // Extract URL (same logic as the share route handler)
+  const rawText = shareData.url || shareData.text || shareData.title || "";
+  const urlMatch = rawText.match(/https?:\/\/[^\s]+/);
+  const url = urlMatch ? urlMatch[0].replace(/[.,;:!?)]+$/, "") : rawText;
+  if (!url) return { success: false, error: "No URL found" };
+
+  // Duplicate detection
+  const { data: existing } = await supabase
+    .from("articles")
+    .select("id")
+    .eq("instance_id", instanceId)
+    .eq("url", url)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) return { success: true, articleId: existing.id, duplicate: true };
+
+  const enriched = await enrichUrl(url, { sharedTitle: shareData.title });
+
+  const { data, error } = await supabase.from("articles").insert({
+    user_id: user.id,
+    instance_id: instanceId,
+    url: enriched.url,
+    title: enriched.title,
+    content: enriched.content,
+    excerpt: enriched.excerpt,
+    author: enriched.author,
+    site_name: enriched.siteName,
+    image_url: enriched.imageUrl,
+    content_type: enriched.contentType,
+    youtube_video_id: enriched.youtubeVideoId,
+    scraped_at: enriched.scrapeError ? null : new Date().toISOString(),
+    scrape_error: enriched.scrapeError,
+  }).select("id").single();
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/i/${slug}/articles`);
+  return { success: true, articleId: data.id };
+}
+
 export async function saveArticle(slug: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

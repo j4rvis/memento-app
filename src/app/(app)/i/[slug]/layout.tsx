@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import type { InstanceFeatures } from "@/lib/instance/types";
+import { PendingShareHandler } from "@/components/pwa/pending-share-handler";
 
 export default async function InstanceLayout({
   children,
@@ -61,6 +62,7 @@ export default async function InstanceLayout({
             fullName={profile?.full_name ?? undefined}
             avatarUrl={avatarUrl}
           />
+          <PendingShareHandler slug={slug} />
           <main className="flex-1 p-4 pb-18 md:p-6 md:pb-6">{children}</main>
           <BottomNav slug={slug} features={features} />
         </SidebarInset>

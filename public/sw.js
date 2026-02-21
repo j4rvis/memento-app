@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `memento-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `memento-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -27,13 +27,48 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// IndexedDB helpers for fast share target interception
+function openShareDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("memento-share", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("pending");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function storePendingShare(data) {
+  const db = await openShareDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("pending", "readwrite");
+    tx.objectStore("pending").put(data, "share");
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle PWA share target POST — forward to server
+  // Handle PWA share target POST — store in IndexedDB and redirect immediately
   if (request.method === "POST" && url.pathname === "/api/articles/share") {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      (async () => {
+        try {
+          const formData = await request.formData();
+          await storePendingShare({
+            title: formData.get("title") || "",
+            text: formData.get("text") || "",
+            url: formData.get("url") || "",
+          });
+          return Response.redirect("/", 303);
+        } catch {
+          // IDB failed — fall back to server-side handling
+          return fetch(request.clone());
+        }
+      })()
+    );
     return;
   }
 
