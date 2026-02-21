@@ -24,6 +24,12 @@ function getInstagramEmbedUrl(url: string): string | null {
   return match ? `https://www.instagram.com/p/${match[1]}/embed/` : null;
 }
 
+function getInstagramShortTitle(author: string | null, createdAt: string): string {
+  const date = new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  if (author) return `Instagram by ${author} · ${date}`;
+  return `Instagram · ${date}`;
+}
+
 interface Article {
   id: string;
   title: string | null;
@@ -99,7 +105,11 @@ export function ArticleReader({
             className="text-2xl font-bold"
           />
         ) : (
-          <h1 className="text-3xl font-bold">{article.title || "Untitled"}</h1>
+          <h1 className="text-3xl font-bold">
+            {instagramEmbedUrl
+              ? getInstagramShortTitle(article.author, article.created_at)
+              : (article.title || "Untitled")}
+          </h1>
         )}
       </div>
 
@@ -213,22 +223,22 @@ export function ArticleReader({
               />
             </div>
           ) : instagramEmbedUrl ? (
-            <div className="space-y-6">
-              {article.content && (
-                <article className="prose dark:prose-invert max-w-none whitespace-pre-wrap">
-                  {article.content}
-                </article>
-              )}
-              <div className="flex justify-center">
+            <div className="flex gap-6 flex-col sm:flex-row items-start justify-center">
+              <div className="flex justify-center shrink-0">
                 <iframe
                   src={instagramEmbedUrl}
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                   className="rounded-lg border-0"
                   width="400"
                   height="520"
                   loading="lazy"
+                  allowFullScreen
                 />
               </div>
+              {article.title && (
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed sm:max-w-xs">
+                  {article.title}
+                </p>
+              )}
             </div>
           ) : article.content ? (
             <article
