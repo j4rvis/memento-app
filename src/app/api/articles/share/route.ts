@@ -1,6 +1,9 @@
+import { after } from "next/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enrichUrl } from "@/modules/articles/lib/enricher";
+import { isYouTubeUrl } from "@/modules/articles/lib/youtube";
+import { detectPlatform } from "@/modules/articles/lib/platforms";
 
 // PWA Share Target handler
 export async function POST(request: NextRequest) {
@@ -57,23 +60,45 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const enriched = await enrichUrl(url, { sharedTitle, sharedText: sharedTitle });
+  // Detect content type synchronously (no network calls) for the initial insert
+  const contentType = isYouTubeUrl(url)
+    ? "youtube"
+    : detectPlatform(url)
+    ? "other"
+    : "article";
 
-  await supabase.from("articles").insert({
-    user_id: user.id,
-    instance_id: instanceId,
-    url: enriched.url,
-    title: enriched.title,
-    content: enriched.content,
-    excerpt: enriched.excerpt,
-    author: enriched.author,
-    site_name: enriched.siteName,
-    image_url: enriched.imageUrl,
-    content_type: enriched.contentType,
-    youtube_video_id: enriched.youtubeVideoId,
-    scraped_at: enriched.scrapeError ? null : new Date().toISOString(),
-    scrape_error: enriched.scrapeError,
-  });
+  // Insert immediately with minimal data so we can redirect fast
+  const { data: article } = await supabase
+    .from("articles")
+    .insert({
+      user_id: user.id,
+      instance_id: instanceId,
+      url,
+      title: sharedTitle ?? url,
+      content_type: contentType,
+    })
+    .select("id")
+    .single();
+
+  // Enrich in the background after the response is sent
+  if (article) {
+    after(async () => {
+      const enriched = await enrichUrl(url, { sharedTitle, sharedText: sharedTitle });
+      await supabase.from("articles").update({
+        url: enriched.url,
+        title: enriched.title,
+        content: enriched.content,
+        excerpt: enriched.excerpt,
+        author: enriched.author,
+        site_name: enriched.siteName,
+        image_url: enriched.imageUrl,
+        content_type: enriched.contentType,
+        youtube_video_id: enriched.youtubeVideoId,
+        scraped_at: enriched.scrapeError ? null : new Date().toISOString(),
+        scrape_error: enriched.scrapeError,
+      }).eq("id", article.id);
+    });
+  }
 
   return NextResponse.redirect(new URL(`/i/${instanceSlug}/articles`, request.url));
 }
