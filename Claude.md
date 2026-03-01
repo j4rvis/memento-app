@@ -47,11 +47,19 @@ Personal productivity app with multi-tenant workspaces. Built with Next.js, Supa
 
 ## Ticket Workflow
 
-Tickets live in `docs/tickets/backlog/` (pending) and `docs/tickets/done/` (completed).
+Tickets flow through three folders:
+
+| Folder | Purpose |
+|--------|---------|
+| `docs/tickets/todo/` | Claude-planned tickets awaiting user review before implementation |
+| `docs/tickets/backlog/` | Approved tickets ready for Claude to implement |
+| `docs/tickets/done/` | Completed tickets with implementation summary |
+
+**Flow:** `todo/` → *(user approves)* → `backlog/` → *(Claude implements)* → `done/`
 
 **Picking the next ticket:** When prompted to continue working on a ticket, read the files in `docs/tickets/backlog/` and pick the one with the lowest ticket number (`007` before `010`, etc.).
 
-**Standard flow:**
+**Standard implementation flow:**
 1. **Read** the ticket file
 2. **Explore** the relevant parts of the codebase
 3. **Plan** — write the implementation plan directly into the ticket file under a `## Plan` heading
@@ -59,6 +67,8 @@ Tickets live in `docs/tickets/backlog/` (pending) and `docs/tickets/done/` (comp
 5. **Implement** the changes
 6. **Await review** from the user
 7. **Finalize** — append a `## Summary` section with a short description and the completion date, move the ticket from `backlog/` to `done/`, then create a git commit with the ticket filename as the commit message (e.g. `007_tickets_and_claude_md`)
+
+**Planning tickets:** When asked to plan (not implement) a set of tickets, create them in `docs/tickets/todo/` for user review. The user promotes them to `backlog/` when ready.
 
 ## Environment Variables
 
