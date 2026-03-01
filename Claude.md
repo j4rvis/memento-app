@@ -51,13 +51,13 @@ Tickets flow through three folders:
 
 | Folder | Purpose |
 |--------|---------|
-| `docs/tickets/todo/` | Claude-planned tickets awaiting user review before implementation |
-| `docs/tickets/backlog/` | Approved tickets ready for Claude to implement |
+| `docs/tickets/backlog/` | Claude-planned tickets awaiting user review — **not ready to implement** |
+| `docs/tickets/todo/` | User-promoted tickets — **ready for Claude to implement** |
 | `docs/tickets/done/` | Completed tickets with implementation summary |
 
-**Flow:** `todo/` → *(user approves)* → `backlog/` → *(Claude implements)* → `done/`
+**Flow:** `backlog/` → *(user promotes)* → `todo/` → *(Claude implements)* → `done/`
 
-**Picking the next ticket:** When prompted to continue working on a ticket, read the files in `docs/tickets/backlog/` and pick the one with the lowest ticket number (`007` before `010`, etc.).
+**Picking the next ticket:** When prompted to continue working on a ticket, read the files in `docs/tickets/todo/` and pick the one with the lowest ticket number (`007` before `010`, etc.).
 
 **Standard implementation flow:**
 1. **Read** the ticket file
@@ -66,9 +66,9 @@ Tickets flow through three folders:
 4. **Ask** questions if requirements are unclear (before implementing)
 5. **Implement** the changes
 6. **Await review** from the user
-7. **Finalize** — append a `## Summary` section with a short description and the completion date, move the ticket from `backlog/` to `done/`, then create a git commit with the ticket filename as the commit message (e.g. `007_tickets_and_claude_md`)
+7. **Finalize** — append a `## Summary` section with a short description and the completion date, move the ticket from `todo/` to `done/`, then create a git commit with the ticket filename as the commit message (e.g. `007_tickets_and_claude_md`)
 
-**Planning tickets:** When asked to plan (not implement) a set of tickets, create them in `docs/tickets/todo/` for user review. The user promotes them to `backlog/` when ready.
+**Planning tickets:** When asked to plan (not implement) a set of tickets, create them in `docs/tickets/backlog/` for user review. The user moves them to `todo/` when ready to implement.
 
 ## Environment Variables
 
