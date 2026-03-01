@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -231,10 +233,16 @@ export function ArticleContentPanel({
             )}
           </div>
         ) : article.content ? (
-          <article
-            className="prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
+          <article className="prose dark:prose-invert max-w-none">
+            {article.content.includes("</") ? (
+              // Legacy HTML content (articles saved before MD migration)
+              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            ) : (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {article.content}
+              </ReactMarkdown>
+            )}
+          </article>
         ) : (
           <p className="text-muted-foreground">No content available.</p>
         )}

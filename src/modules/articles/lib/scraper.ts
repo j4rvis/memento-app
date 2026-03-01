@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import TurndownService from "turndown";
 
 export interface ScrapedArticle {
   title: string;
@@ -116,9 +117,21 @@ export function parseHtml(html: string, url: string): ScrapedArticle {
   const excerpt =
     metaExcerpt || (firstParagraph ? firstParagraph.slice(0, 300) : "");
 
+  // Convert HTML to Markdown
+  const td = new TurndownService({
+    headingStyle: "atx",
+    codeBlockStyle: "fenced",
+    bulletListMarker: "-",
+  });
+  // Keep image references by URL (not saved locally)
+  td.keep(["figure"]);
+  let contentMd = td.turndown(contentHtml);
+  // Collapse 3+ consecutive blank lines into 2
+  contentMd = contentMd.replace(/\n{3,}/g, "\n\n").trim();
+
   return {
     title,
-    content: contentHtml,
+    content: contentMd,
     excerpt,
     author: metaAuthor,
     siteName,

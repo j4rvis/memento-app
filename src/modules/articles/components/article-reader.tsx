@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -196,7 +198,7 @@ export function ArticleReader({
             </div>
             <input type="hidden" name="title" value={title} />
             <div>
-              <label className="text-sm font-medium mb-1 block">Content (HTML)</label>
+              <label className="text-sm font-medium mb-1 block">Content (Markdown)</label>
               <Textarea
                 name="content"
                 value={content}
@@ -241,10 +243,16 @@ export function ArticleReader({
               )}
             </div>
           ) : article.content ? (
-            <article
-              className="prose dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
+            <article className="prose dark:prose-invert max-w-none">
+              {article.content.includes("</") ? (
+                // Legacy HTML content (articles saved before MD migration)
+                <div dangerouslySetInnerHTML={{ __html: article.content }} />
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {article.content}
+                </ReactMarkdown>
+              )}
+            </article>
           ) : (
             <p className="text-muted-foreground">No content available.</p>
           )}
