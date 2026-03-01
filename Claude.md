@@ -45,6 +45,21 @@ Personal productivity app with multi-tenant workspaces. Built with Next.js, Supa
 - Use `sonner` for toasts (not the deprecated shadcn `toast`)
 - `revalidatePath` uses `/i/${slug}/module` format
 
+## Ticket Workflow
+
+Tickets live in `docs/tickets/backlog/` (pending) and `docs/tickets/done/` (completed).
+
+**Picking the next ticket:** When prompted to continue working on a ticket, read the files in `docs/tickets/backlog/` and pick the one with the lowest ticket number (`007` before `010`, etc.).
+
+**Standard flow:**
+1. **Read** the ticket file
+2. **Explore** the relevant parts of the codebase
+3. **Plan** — write the implementation plan directly into the ticket file under a `## Plan` heading
+4. **Ask** questions if requirements are unclear (before implementing)
+5. **Implement** the changes
+6. **Await review** from the user
+7. **Finalize** — append a `## Summary` section with a short description and the completion date, move the ticket from `backlog/` to `done/`, then create a git commit with the ticket filename as the commit message (e.g. `007_tickets_and_claude_md`)
+
 ## Environment Variables
 
 ```
