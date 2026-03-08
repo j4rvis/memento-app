@@ -5,11 +5,32 @@ import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
+import { tags } from "@lezer/highlight";
 import { wikiLinkPlugin, wikiLinkCompletion } from "./wiki-link-extension";
 
-// ── App-aware theme using CSS variables ─────────────────────────────────────
+// ── Markdown visual style: headings big, bold=bold, italic=italic, etc ──────
+
+const markdownStyle = HighlightStyle.define([
+  { tag: tags.heading1, fontSize: "1.6em", fontWeight: "700", lineHeight: "1.3" },
+  { tag: tags.heading2, fontSize: "1.35em", fontWeight: "700", lineHeight: "1.3" },
+  { tag: tags.heading3, fontSize: "1.15em", fontWeight: "600" },
+  { tag: tags.heading4, fontWeight: "600" },
+  { tag: tags.heading5, fontWeight: "600" },
+  { tag: tags.heading6, fontWeight: "600" },
+  { tag: tags.strong, fontWeight: "700" },
+  { tag: tags.emphasis, fontStyle: "italic" },
+  { tag: tags.strikethrough, textDecoration: "line-through" },
+  { tag: tags.monospace, fontFamily: "monospace", fontSize: "0.9em" },
+  { tag: tags.link, color: "oklch(0.6 0.15 250)", textDecoration: "underline" },
+  { tag: tags.url, color: "oklch(0.55 0.12 250)" },
+  { tag: tags.quote, color: "var(--muted-foreground)", fontStyle: "italic" },
+  { tag: tags.comment, color: "var(--muted-foreground)" },
+]);
+
+// ── Base theme: layout, colors, wiki-link pill, autocomplete popup ───────────
 
 const appTheme = EditorView.theme({
   "&": {
@@ -32,12 +53,15 @@ const appTheme = EditorView.theme({
     backgroundColor: "var(--accent)",
   },
   ".cm-activeLine": { backgroundColor: "transparent" },
+  // Hide the heading markers (#) but keep them for editing (they remain in doc)
+  // Wiki-link pill style
   ".cm-wiki-link": {
-    color: "oklch(0.6 0.15 250)",
+    color: "oklch(0.55 0.18 250)",
     cursor: "pointer",
-    borderBottom: "1px solid oklch(0.6 0.15 250)",
+    borderBottom: "1px solid oklch(0.55 0.18 250)",
   },
   ".cm-wiki-link:hover": { opacity: "0.75" },
+  // Autocomplete popup
   ".cm-tooltip-autocomplete": {
     backgroundColor: "var(--popover)",
     border: "1px solid var(--border)",
@@ -47,6 +71,9 @@ const appTheme = EditorView.theme({
   ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
     backgroundColor: "var(--accent)",
     color: "var(--accent-foreground)",
+  },
+  ".cm-tooltip-autocomplete > ul > li": {
+    padding: "4px 10px",
   },
 });
 
@@ -71,7 +98,6 @@ export function CodeMirrorEditor({
   const onNavigateRef = useRef(onNavigateToNote);
   const notesRef = useRef(notes);
 
-  // Keep refs current without recreating editor
   onChangeRef.current = onChange;
   onNavigateRef.current = onNavigateToNote;
   notesRef.current = notes;
@@ -88,6 +114,7 @@ export function CodeMirrorEditor({
       extensions: [
         history(),
         markdown({ base: markdownLanguage, codeLanguages: languages }),
+        syntaxHighlighting(markdownStyle),
         closeBrackets(),
         placeholder(placeholderText),
         appTheme,
