@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query/keys";
 import { useInstance } from "@/lib/instance/context";
 import { createNote } from "@/app/(app)/i/[slug]/notes/actions";
@@ -10,7 +10,11 @@ import { useNotes, useNoteFolders } from "../lib/hooks";
 import { FolderPanel } from "./folder-panel";
 import { NotesListPanel } from "./notes-list-panel";
 import { NoteEditorPanel } from "./note-editor-panel";
+import { fetchTodos } from "@/modules/todos/lib/queries";
+import { fetchArticles } from "@/modules/articles/lib/queries";
+import { fetchFeedsWithCounts } from "@/modules/feeds/lib/queries";
 import type { Note, NoteFolder } from "../lib/types";
+import type { WikiLinkResourceType, WikiLinkResource } from "./wiki-link-extension";
 
 export const DAILY_NOTES_FOLDER_ID = "__daily__";
 
@@ -43,6 +47,43 @@ export function NotesLayout({
   const notes = (notesData ?? initialNotes) as Note[];
   const folders = (foldersData ?? initialFolders) as NoteFolder[];
 
+  // Fetch cross-resource data for wiki link autocomplete
+  const { data: todos } = useQuery({
+    queryKey: queryKeys.todos.list(instance.id),
+    queryFn: () => fetchTodos(instance.id),
+    staleTime: 60_000,
+  });
+
+  const { data: articles } = useQuery({
+    queryKey: queryKeys.articles.list(instance.id),
+    queryFn: () => fetchArticles(instance.id),
+    staleTime: 60_000,
+  });
+
+  const { data: feeds } = useQuery({
+    queryKey: queryKeys.feeds.list(instance.id),
+    queryFn: () => fetchFeedsWithCounts(instance.id),
+    staleTime: 60_000,
+  });
+
+  // Build unified resource list for wiki link autocomplete
+  const resources = useMemo<WikiLinkResource[]>(() => {
+    const result: WikiLinkResource[] = [];
+    for (const n of notes) {
+      result.push({ type: "note", id: n.id, title: n.title });
+    }
+    for (const t of todos ?? []) {
+      result.push({ type: "todo", id: t.id, title: t.title });
+    }
+    for (const a of articles ?? []) {
+      if (a.title) result.push({ type: "article", id: a.id, title: a.title });
+    }
+    for (const f of feeds ?? []) {
+      if (f.title) result.push({ type: "feed", id: f.id, title: f.title });
+    }
+    return result;
+  }, [notes, todos, articles, feeds]);
+
   const selectedNote = selectedNoteId ? (notes.find((n) => n.id === selectedNoteId) ?? null) : null;
 
   // Keep URL in sync
@@ -66,12 +107,8 @@ export function NotesLayout({
       // Auto-create today's daily note
       (async () => {
         const id = await createNote(slug, null);
-        // Set the title via a Supabase update — createNote creates "Untitled Note"
-        // We'll rename it by updating the cache title and triggering a save
         await queryClient.invalidateQueries({ queryKey: queryKeys.notes.list(instance.id) });
         setSelectedNoteId(id);
-        // The editor will get "Untitled Note" — the user needs to confirm or we can
-        // pre-set the title. We'll update the record directly.
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         await supabase.from("notes").update({ title }).eq("id", id);
@@ -109,15 +146,39 @@ export function NotesLayout({
     // Cache is already updated in NoteEditorPanel's performSave
   }, []);
 
-  // Navigate to note by title (from wiki links & backlinks)
-  const handleNavigateToNote = useCallback((title: string) => {
-    const target = notes.find((n) => n.title === title);
-    if (target) {
-      setSelectedNoteId(target.id);
-      // Switch to the folder that contains the target note (or All Notes)
-      setSelectedFolderId(target.folder_id ?? null);
+  // Navigate to a wiki-linked resource
+  const handleNavigate = useCallback((type: WikiLinkResourceType, title: string) => {
+    if (type === "note") {
+      const target = notes.find((n) => n.title === title);
+      if (target) {
+        setSelectedNoteId(target.id);
+        setSelectedFolderId(target.folder_id ?? null);
+      }
+      return;
     }
-  }, [notes]);
+    if (type === "todo") {
+      router.push(`/i/${slug}/todos`);
+      return;
+    }
+    if (type === "article") {
+      const target = (articles ?? []).find((a) => a.title === title);
+      if (target) {
+        router.push(`/i/${slug}/articles/${target.id}`);
+      } else {
+        router.push(`/i/${slug}/articles`);
+      }
+      return;
+    }
+    if (type === "feed") {
+      const target = (feeds ?? []).find((f) => f.title === title);
+      if (target) {
+        router.push(`/i/${slug}/feeds/${target.id}`);
+      } else {
+        router.push(`/i/${slug}/feeds`);
+      }
+      return;
+    }
+  }, [notes, articles, feeds, slug, router]);
 
   // Listen for mobile folder changes from select element
   useEffect(() => {
@@ -147,10 +208,11 @@ export function NotesLayout({
       <NoteEditorPanel
         note={selectedNote}
         notes={notes}
+        resources={resources}
         onBack={() => setSelectedNoteId(null)}
         onNoteDeleted={handleNoteDeleted}
         onNoteUpdated={handleNoteUpdated}
-        onNavigateToNote={handleNavigateToNote}
+        onNavigate={handleNavigate}
       />
     </div>
   );

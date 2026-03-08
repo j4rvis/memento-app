@@ -119,7 +119,7 @@ export function NotesListPanel({
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
                     {note.is_pinned && <Pin className="h-3 w-3 text-muted-foreground fill-current" />}
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap" suppressHydrationWarning>
                       {formatNoteTime(note.updated_at)}
                     </span>
                   </div>

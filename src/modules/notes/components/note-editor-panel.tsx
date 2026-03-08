@@ -12,6 +12,7 @@ import { useDeleteNote, useTogglePin } from "../lib/hooks";
 import { CodeMirrorEditor } from "./code-mirror-editor";
 import { EmbedRenderer } from "./embed-renderer";
 import type { Note, SyncState } from "../lib/types";
+import type { WikiLinkResource, WikiLinkResourceType } from "./wiki-link-extension";
 
 const AUTOSAVE_DELAY_MS = 5000;
 
@@ -44,19 +45,21 @@ function SyncIndicator({ state }: { state: SyncState }) {
 interface NoteEditorPanelProps {
   note: Note | null;
   notes: Note[];
+  resources: WikiLinkResource[];
   onBack: () => void;
   onNoteDeleted: (id: string) => void;
   onNoteUpdated: (id: string, title: string, content: string) => void;
-  onNavigateToNote: (title: string) => void;
+  onNavigate: (type: WikiLinkResourceType, title: string) => void;
 }
 
 export function NoteEditorPanel({
   note,
   notes,
+  resources,
   onBack,
   onNoteDeleted,
   onNoteUpdated,
-  onNavigateToNote,
+  onNavigate,
 }: NoteEditorPanelProps) {
   const { instance } = useInstance();
   const queryClient = useQueryClient();
@@ -255,8 +258,8 @@ export function NoteEditorPanel({
             setContent(newContent);
             scheduleSave();
           }}
-          notes={notes}
-          onNavigateToNote={onNavigateToNote}
+          resources={resources}
+          onNavigate={onNavigate}
         />
       </div>
 
@@ -270,7 +273,7 @@ export function NoteEditorPanel({
             {backlinks.map((n) => (
               <button
                 key={n.id}
-                onClick={() => onNavigateToNote(n.title)}
+                onClick={() => onNavigate("note", n.title)}
                 className="text-sm text-left hover:underline text-primary truncate"
               >
                 {n.title}
@@ -281,7 +284,7 @@ export function NoteEditorPanel({
       )}
 
       {/* Inline embeds: render ![[...]] references */}
-      <EmbedRenderer content={content} notes={notes} onNavigate={onNavigateToNote} />
+      <EmbedRenderer content={content} notes={notes} onNavigate={(title) => onNavigate("note", title)} />
     </div>
   );
 }
