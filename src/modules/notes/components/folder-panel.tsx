@@ -9,8 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FolderOpen, Folder, MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
+import { FolderOpen, Folder, MoreHorizontal, Plus, Pencil, Trash2, CalendarDays } from "lucide-react";
 import { useNoteFolders, useCreateFolder, useRenameFolder, useDeleteFolder } from "../lib/hooks";
+import { DAILY_NOTES_FOLDER_ID } from "./notes-layout";
 import type { NoteFolder } from "../lib/types";
 
 interface FolderPanelProps {
@@ -94,6 +95,18 @@ export function FolderPanel({ initialFolders, selectedFolderId, onSelectFolder }
         >
           <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="truncate">All Notes</span>
+        </button>
+
+        {/* Daily Notes */}
+        <button
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-none hover:bg-accent transition-colors text-left",
+            selectedFolderId === DAILY_NOTES_FOLDER_ID && "bg-accent font-medium"
+          )}
+          onClick={() => onSelectFolder(DAILY_NOTES_FOLDER_ID)}
+        >
+          <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate">Daily Notes</span>
         </button>
 
         {/* User folders */}

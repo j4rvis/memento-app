@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, StickyNote, Pin } from "lucide-react";
 import { useNotes } from "../lib/hooks";
+import { DAILY_NOTES_FOLDER_ID } from "./notes-layout";
 import type { Note, NoteFolder } from "../lib/types";
 
 function formatNoteTime(dateString: string): string {
@@ -42,11 +43,15 @@ export function NotesListPanel({
   const notes = (allNotes ?? initialNotes) as Note[];
 
   const filtered = selectedFolderId
-    ? notes.filter((n) => n.folder_id === selectedFolderId)
+    ? selectedFolderId === DAILY_NOTES_FOLDER_ID
+      ? notes.filter((n) => /^\d{4}-\d{2}-\d{2}$/.test(n.title))
+      : notes.filter((n) => n.folder_id === selectedFolderId)
     : notes;
 
   const currentFolderName = selectedFolderId
-    ? (folders.find((f) => f.id === selectedFolderId)?.name ?? "Folder")
+    ? selectedFolderId === DAILY_NOTES_FOLDER_ID
+      ? "Daily Notes"
+      : (folders.find((f) => f.id === selectedFolderId)?.name ?? "Folder")
     : "All Notes";
 
   return (
@@ -77,12 +82,12 @@ export function NotesListPanel({
           className="w-full text-sm bg-background border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-ring"
           value={selectedFolderId ?? ""}
           onChange={(e) => {
-            // handled by parent via onSelectFolder — we emit via a custom event
             const event = new CustomEvent("folderChange", { detail: e.target.value || null, bubbles: true });
             e.target.dispatchEvent(event);
           }}
         >
           <option value="">All Notes</option>
+          <option value={DAILY_NOTES_FOLDER_ID}>Daily Notes</option>
           {folders.map((f) => (
             <option key={f.id} value={f.id}>{f.name}</option>
           ))}

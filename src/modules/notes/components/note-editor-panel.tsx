@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Pin, Trash2, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Pin, Trash2, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query/keys";
 import { useInstance } from "@/lib/instance/context";
 import { useDeleteNote, useTogglePin } from "../lib/hooks";
+import { CodeMirrorEditor } from "./code-mirror-editor";
+import { EmbedRenderer } from "./embed-renderer";
 import type { Note, SyncState } from "../lib/types";
 
 const AUTOSAVE_DELAY_MS = 5000;
@@ -41,12 +43,21 @@ function SyncIndicator({ state }: { state: SyncState }) {
 
 interface NoteEditorPanelProps {
   note: Note | null;
+  notes: Note[];
   onBack: () => void;
   onNoteDeleted: (id: string) => void;
   onNoteUpdated: (id: string, title: string, content: string) => void;
+  onNavigateToNote: (title: string) => void;
 }
 
-export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: NoteEditorPanelProps) {
+export function NoteEditorPanel({
+  note,
+  notes,
+  onBack,
+  onNoteDeleted,
+  onNoteUpdated,
+  onNavigateToNote,
+}: NoteEditorPanelProps) {
   const { instance } = useInstance();
   const queryClient = useQueryClient();
   const supabase = createClient();
@@ -57,6 +68,7 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
   const [title, setTitle] = useState(note?.title ?? "");
   const [content, setContent] = useState(note?.content ?? "");
   const [syncState, setSyncState] = useState<SyncState>("idle");
+  const [showBacklinks, setShowBacklinks] = useState(false);
 
   // Refs for closing over current values in async callbacks
   const noteIdRef = useRef<string | null>(note?.id ?? null);
@@ -84,7 +96,6 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
       setSyncState("saved");
       isDirtyRef.current = false;
 
-      // Update React Query cache
       queryClient.setQueryData(
         queryKeys.notes.list(instance.id),
         (old: Note[] | undefined) =>
@@ -92,7 +103,6 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
       );
       onNoteUpdated(id, t, c);
 
-      // Auto-reset to idle after 2s
       if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
       savedTimeoutRef.current = setTimeout(() => setSyncState("idle"), 2000);
     } catch {
@@ -116,22 +126,15 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
   const flushSave = useCallback(() => {
     if (!isDirtyRef.current || !noteIdRef.current) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    const id = noteIdRef.current;
-    const t = titleRef.current;
-    const c = contentRef.current;
-    // Fire and forget
-    performSave(id, t, c);
+    performSave(noteIdRef.current, titleRef.current, contentRef.current);
   }, [performSave]);
 
-  // When note changes, flush save for old note, reset state for new
   useEffect(() => {
     const prevId = noteIdRef.current;
     const newId = note?.id ?? null;
 
     if (prevId !== newId) {
-      if (prevId && isDirtyRef.current) {
-        flushSave();
-      }
+      if (prevId && isDirtyRef.current) flushSave();
       noteIdRef.current = newId;
       isDirtyRef.current = false;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -144,7 +147,6 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note?.id]);
 
-  // Flush on unmount
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -166,6 +168,15 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
     if (!note) return;
     togglePin.mutate(note.id);
   }
+
+  // Backlinks: notes that reference [[current note title]]
+  const backlinks = note
+    ? notes.filter(
+        (n) =>
+          n.id !== note.id &&
+          n.content?.includes(`[[${note.title}]]`)
+      )
+    : [];
 
   if (!note) {
     return (
@@ -206,6 +217,17 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
         </Button>
         <div className="flex-1" />
         <SyncIndicator state={syncState} />
+        {backlinks.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("h-7 w-7", showBacklinks && "bg-accent")}
+            onClick={() => setShowBacklinks((v) => !v)}
+            title={`${backlinks.length} backlink${backlinks.length !== 1 ? "s" : ""}`}
+          >
+            <Link2 className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -225,13 +247,41 @@ export function NoteEditorPanel({ note, onBack, onNoteDeleted, onNoteUpdated }: 
         className="px-4 pt-4 pb-2 text-xl font-semibold bg-transparent outline-none border-none placeholder:text-muted-foreground/50 shrink-0"
       />
 
-      {/* Content */}
-      <textarea
-        value={content}
-        onChange={(e) => { setContent(e.target.value); scheduleSave(); }}
-        placeholder="Write your note..."
-        className="flex-1 px-4 pb-4 bg-transparent outline-none border-none resize-none font-mono text-sm placeholder:text-muted-foreground/50"
-      />
+      {/* CodeMirror editor */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <CodeMirrorEditor
+          value={content}
+          onChange={(newContent) => {
+            setContent(newContent);
+            scheduleSave();
+          }}
+          notes={notes}
+          onNavigateToNote={onNavigateToNote}
+        />
+      </div>
+
+      {/* Backlinks panel */}
+      {showBacklinks && backlinks.length > 0 && (
+        <div className="border-t px-4 py-3 shrink-0 bg-muted/30">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Linked by ({backlinks.length})
+          </p>
+          <div className="flex flex-col gap-1">
+            {backlinks.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => onNavigateToNote(n.title)}
+                className="text-sm text-left hover:underline text-primary truncate"
+              >
+                {n.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Inline embeds: render ![[...]] references */}
+      <EmbedRenderer content={content} notes={notes} onNavigate={onNavigateToNote} />
     </div>
   );
 }
