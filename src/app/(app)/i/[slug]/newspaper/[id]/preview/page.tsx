@@ -19,42 +19,61 @@ export default async function PreviewPage({
   await resolveInstance(slug);
   const supabase = await createClient();
 
-  let edition;
+  const [editionResult, newspaperResult] = await Promise.all([
+    editionId
+      ? supabase.from("newspaper_editions").select("*").eq("id", editionId).single()
+      : supabase
+          .from("newspaper_editions")
+          .select("*")
+          .eq("newspaper_id", id)
+          .order("generated_at", { ascending: false })
+          .limit(1)
+          .single(),
+    supabase.from("newspapers").select("print_config").eq("id", id).single(),
+  ]);
 
-  if (editionId) {
-    const { data } = await supabase
-      .from("newspaper_editions")
-      .select("*")
-      .eq("id", editionId)
-      .single();
-    edition = data;
-  } else {
-    const { data } = await supabase
-      .from("newspaper_editions")
-      .select("*")
-      .eq("newspaper_id", id)
-      .order("generated_at", { ascending: false })
-      .limit(1)
-      .single();
-    edition = data;
-  }
-
+  const edition = editionResult.data;
   if (!edition) notFound();
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 print:hidden">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/i/${slug}/newspaper/${id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Editor
-          </Link>
-        </Button>
-        <div className="flex-1" />
-        <PrintButton />
-      </div>
+  const rawPc = newspaperResult.data?.print_config;
+  const printConfig = (rawPc && typeof rawPc === "object" && !Array.isArray(rawPc)
+    ? rawPc
+    : {}) as Record<string, string>;
 
-      <NewspaperPreview edition={edition} />
-    </div>
+  return (
+    <>
+      <style>{`
+        @media print {
+          [data-sidebar="sidebar"],
+          [data-slot="sidebar-gap"],
+          header,
+          nav {
+            display: none !important;
+          }
+          main {
+            padding: 0 !important;
+          }
+          @page {
+            margin: 1.5cm;
+            size: A4;
+          }
+        }
+      `}</style>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-4 print:hidden">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={`/i/${slug}/newspaper/${id}`}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Editor
+            </Link>
+          </Button>
+          <div className="flex-1" />
+          <PrintButton />
+        </div>
+
+        <NewspaperPreview edition={edition} printConfig={printConfig} />
+      </div>
+    </>
   );
 }

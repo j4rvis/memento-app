@@ -388,6 +388,7 @@ export type Database = {
           instance_id: string
           is_default: boolean
           kindle_email: string | null
+          print_config: Json
           schedule: string | null
           title: string
           updated_at: string
@@ -400,6 +401,7 @@ export type Database = {
           instance_id: string
           is_default?: boolean
           kindle_email?: string | null
+          print_config?: Json
           schedule?: string | null
           title?: string
           updated_at?: string
@@ -412,6 +414,7 @@ export type Database = {
           instance_id?: string
           is_default?: boolean
           kindle_email?: string | null
+          print_config?: Json
           schedule?: string | null
           title?: string
           updated_at?: string

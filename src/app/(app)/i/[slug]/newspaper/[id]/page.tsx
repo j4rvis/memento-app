@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { resolveInstance } from "@/lib/instance/server";
+import { getInstanceIdFromSlug } from "@/lib/instance/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,20 +20,45 @@ export default async function NewspaperDetailPage({
   const { slug, id } = await params;
   await resolveInstance(slug);
   const supabase = await createClient();
+  const instanceId = await getInstanceIdFromSlug(slug);
 
-  const { data: newspaper } = await supabase
-    .from("newspapers")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [
+    { data: newspaper },
+    { data: blocks },
+    { data: feeds },
+    { data: articles },
+  ] = await Promise.all([
+    supabase.from("newspapers").select("*").eq("id", id).single(),
+    supabase
+      .from("newspaper_blocks")
+      .select("*")
+      .eq("newspaper_id", id)
+      .order("sort_order"),
+    supabase
+      .from("feeds")
+      .select("id, title")
+      .eq("instance_id", instanceId)
+      .order("title"),
+    supabase
+      .from("articles")
+      .select("id, title")
+      .eq("instance_id", instanceId)
+      .eq("is_archived", false)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
   if (!newspaper) notFound();
 
-  const { data: blocks } = await supabase
-    .from("newspaper_blocks")
-    .select("*")
-    .eq("newspaper_id", id)
-    .order("sort_order");
+  const pc = (newspaper.print_config && typeof newspaper.print_config === "object" && !Array.isArray(newspaper.print_config)
+    ? newspaper.print_config
+    : {}) as Record<string, string>;
+
+  const feedOptions = feeds ?? [];
+  const articleOptions = (articles ?? []).map((a) => ({
+    id: a.id,
+    title: a.title ?? "(untitled)",
+  }));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -80,6 +106,64 @@ export default async function NewspaperDetailPage({
             placeholder="your-kindle@kindle.com"
           />
         </div>
+
+        <Separator />
+        <p className="text-sm font-medium">Print Settings</p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="print_font_family">Font</Label>
+            <select
+              id="print_font_family"
+              name="print_font_family"
+              defaultValue={pc.font_family ?? "serif"}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="serif">Serif (classic)</option>
+              <option value="sans">Sans-serif (modern)</option>
+              <option value="mono">Monospace</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="print_font_size">Font Size</Label>
+            <select
+              id="print_font_size"
+              name="print_font_size"
+              defaultValue={pc.font_size ?? "md"}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="sm">Small</option>
+              <option value="md">Medium</option>
+              <option value="lg">Large</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="print_line_height">Line Spacing</Label>
+            <select
+              id="print_line_height"
+              name="print_line_height"
+              defaultValue={pc.line_height ?? "relaxed"}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="normal">Normal</option>
+              <option value="relaxed">Relaxed</option>
+              <option value="loose">Loose</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="print_columns">Layout</Label>
+            <select
+              id="print_columns"
+              name="print_columns"
+              defaultValue={pc.columns ?? "1"}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="1">Single column</option>
+              <option value="2">Two columns</option>
+            </select>
+          </div>
+        </div>
+
         <Button type="submit" variant="outline">
           Save Settings
         </Button>
@@ -98,13 +182,20 @@ export default async function NewspaperDetailPage({
                 isFirst={idx === 0}
                 isLast={idx === blocks.length - 1}
                 slug={slug}
+                feeds={feedOptions}
+                articles={articleOptions}
               />
             ))}
           </div>
         ) : (
           <p className="text-muted-foreground">No blocks yet. Add your first block below.</p>
         )}
-        <AddBlockForm newspaperId={id} slug={slug} />
+        <AddBlockForm
+          newspaperId={id}
+          slug={slug}
+          feeds={feedOptions}
+          articles={articleOptions}
+        />
       </div>
     </div>
   );
