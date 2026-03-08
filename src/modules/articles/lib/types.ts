@@ -2,7 +2,7 @@ export interface Article {
   id: string;
   title: string | null;
   url: string;
-  content: string | null;
+  content?: string | null;
   excerpt: string | null;
   author: string | null;
   site_name: string | null;

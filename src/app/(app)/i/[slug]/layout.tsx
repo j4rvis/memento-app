@@ -16,22 +16,17 @@ export default async function InstanceLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { instance, role } = await resolveInstance(slug);
-
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
-  const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, avatar_url")
-      .eq("id", user!.id)
-      .single(),
-    supabase
-      .from("instance_memberships")
-      .select("role, instances(id, name, slug)")
-      .eq("user_id", user!.id),
-  ]);
+  // Parallelize all independent fetches. getSession() reads from cookie (no network call).
+  // RLS on profiles and instance_memberships filters to the current user automatically.
+  const [{ instance, role }, { data: { session } }, { data: profile }, { data: memberships }] =
+    await Promise.all([
+      resolveInstance(slug),
+      supabase.auth.getSession(),
+      supabase.from("profiles").select("full_name, avatar_url").single(),
+      supabase.from("instance_memberships").select("role, instances(id, name, slug)"),
+    ]);
 
   const avatarUrl = profile?.avatar_url
     ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_url).data.publicUrl
@@ -58,7 +53,7 @@ export default async function InstanceLayout({
         />
         <SidebarInset>
           <AppHeader
-            email={user!.email}
+            email={session?.user?.email}
             fullName={profile?.full_name ?? undefined}
             avatarUrl={avatarUrl}
           />

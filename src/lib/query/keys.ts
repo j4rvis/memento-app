@@ -30,6 +30,8 @@ export const queryKeys = {
     all: (instanceId: string) => ["articles", instanceId] as const,
     list: (instanceId: string, tagId?: string) =>
       ["articles", instanceId, "list", { tagId }] as const,
+    detail: (instanceId: string, articleId: string) =>
+      ["articles", instanceId, "detail", articleId] as const,
     counts: (instanceId: string) =>
       ["articles", instanceId, "counts"] as const,
     tags: (instanceId: string) => ["articles", instanceId, "tags"] as const,

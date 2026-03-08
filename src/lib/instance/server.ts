@@ -8,30 +8,31 @@ export const resolveInstance = cache(async function resolveInstance(slug: string
   role: InstanceRole;
 }> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) notFound();
 
-  const { data: instance } = await supabase
+  // Single query: join instances + instance_memberships.
+  // RLS on instance_memberships (user_id = auth.uid()) filters to current user.
+  // !inner means null result → notFound if user has no membership.
+  const { data } = await supabase
     .from("instances")
-    .select("*")
+    .select("*, instance_memberships!inner(role)")
     .eq("slug", slug)
     .single();
 
-  if (!instance) notFound();
+  if (!data) notFound();
 
-  const { data: membership } = await supabase
-    .from("instance_memberships")
-    .select("role")
-    .eq("instance_id", instance.id)
-    .eq("user_id", user.id)
-    .single();
-
+  const memberships = data.instance_memberships as Array<{ role: InstanceRole }>;
+  const membership = memberships[0];
   if (!membership) notFound();
 
   return {
     instance: {
-      ...instance,
-      settings: instance.settings as InstanceSettings,
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      owner_id: data.owner_id,
+      settings: data.settings as InstanceSettings,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
     },
     role: membership.role,
   };

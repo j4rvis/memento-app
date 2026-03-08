@@ -12,6 +12,7 @@ import { useInstance } from "@/lib/instance/context";
 import { queryKeys } from "@/lib/query/keys";
 import { toggleRead, toggleArchive, deleteArticle, setArticleTag } from "@/app/(app)/i/[slug]/articles/actions";
 import { formatDate } from "@/lib/format";
+import { useArticleContent } from "../lib/hooks";
 import type { Article, ArticleTag } from "../lib/types";
 
 function getInstagramEmbedUrl(url: string): string | null {
@@ -42,6 +43,8 @@ export function ArticleContentPanel({
 }: ArticleContentPanelProps) {
   const { instance } = useInstance();
   const queryClient = useQueryClient();
+  const { data: articleContent, isLoading: isContentLoading } = useArticleContent(article?.id ?? null);
+  const content = articleContent?.content ?? article?.content;
 
   // Auto-mark as read when article opens
   useEffect(() => {
@@ -232,14 +235,16 @@ export function ArticleContentPanel({
               </p>
             )}
           </div>
-        ) : article.content ? (
+        ) : isContentLoading ? (
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        ) : content ? (
           <article className="prose dark:prose-invert max-w-none">
-            {article.content.includes("</") ? (
+            {content.includes("</") ? (
               // Legacy HTML content (articles saved before MD migration)
-              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+              <div dangerouslySetInnerHTML={{ __html: content }} />
             ) : (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {article.content}
+                {content}
               </ReactMarkdown>
             )}
           </article>

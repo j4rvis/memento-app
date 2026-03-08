@@ -18,10 +18,11 @@ export default async function ArticlesPage({
   const [{ data: articles }, { data: tags }] = await Promise.all([
     supabase
       .from("articles")
-      .select("*")
+      .select("id, title, url, excerpt, author, site_name, content_type, category, tag_id, youtube_video_id, is_read, is_archived, created_at, instance_id, user_id")
       .eq("instance_id", instance.id)
       .eq("is_archived", false)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(50),
     supabase
       .from("article_tags")
       .select("*")

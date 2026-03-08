@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useInstance } from "@/lib/instance/context";
 import { queryKeys } from "@/lib/query/keys";
-import { fetchArticles, fetchArticleTags } from "./queries";
+import { fetchArticles, fetchArticleTags, fetchArticleContent } from "./queries";
 import { createTag, renameTag, deleteTag } from "@/app/(app)/i/[slug]/articles/actions";
 import type { Article, ArticleTag } from "./types";
 
@@ -24,6 +24,15 @@ export function useArticleTags(initialData?: ArticleTag[]) {
     queryFn: () => fetchArticleTags(instance.id),
     initialData,
     initialDataUpdatedAt: initialData ? Date.now() : undefined,
+  });
+}
+
+export function useArticleContent(articleId: string | null) {
+  const { instance } = useInstance();
+  return useQuery({
+    queryKey: queryKeys.articles.detail(instance.id, articleId ?? ""),
+    queryFn: () => fetchArticleContent(instance.id, articleId!),
+    enabled: !!articleId,
   });
 }
 
