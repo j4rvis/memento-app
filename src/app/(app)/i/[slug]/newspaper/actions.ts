@@ -4,6 +4,48 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
+import { type FillDirection, type LayoutConfig, type PaperFormat, GRID_DIMENSIONS } from "@/modules/newspaper/lib/types";
+
+// --- Grid auto-fill helpers ---
+
+function buildOccupancyGrid(
+  blocks: { grid_col: number | null; grid_row: number | null; col_span: number; row_span: number }[],
+  cols: number,
+  rows: number
+): boolean[][] {
+  const grid: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+  for (const block of blocks) {
+    if (block.grid_col === null || block.grid_row === null) continue;
+    for (let r = block.grid_row; r < block.grid_row + block.row_span && r < rows; r++) {
+      for (let c = block.grid_col; c < block.grid_col + block.col_span && c < cols; c++) {
+        grid[r][c] = true;
+      }
+    }
+  }
+  return grid;
+}
+
+function findNextAvailableCell(
+  grid: boolean[][],
+  cols: number,
+  rows: number,
+  fillDirection: FillDirection
+): { grid_col: number; grid_row: number } | null {
+  if (fillDirection === "column") {
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        if (!grid[r][c]) return { grid_col: c, grid_row: r };
+      }
+    }
+  } else {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!grid[r][c]) return { grid_col: c, grid_row: r };
+      }
+    }
+  }
+  return null;
+}
 
 export async function createNewspaper(slug: string) {
   const supabase = await createClient();
@@ -34,10 +76,14 @@ export async function updateNewspaper(slug: string, id: string, formData: FormDa
     line_height: (formData.get("print_line_height") as string) || "relaxed",
     columns: (formData.get("print_columns") as string) || "1",
   };
+  const layoutConfig: LayoutConfig = {
+    format: ((formData.get("layout_format") as string) || "A4") as PaperFormat,
+    fill_direction: ((formData.get("layout_fill_direction") as string) || "column") as FillDirection,
+  };
 
   const { error } = await supabase
     .from("newspapers")
-    .update({ title, description, kindle_email: kindleEmail, print_config: printConfig })
+    .update({ title, description, kindle_email: kindleEmail, print_config: printConfig, layout_config: layoutConfig })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
@@ -99,16 +145,28 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
   const instanceId = await getInstanceIdFromSlug(slug);
   const blockType = formData.get("block_type") as string;
   const title = (formData.get("title") as string) || blockType;
-
-  const { data: existing } = await supabase
-    .from("newspaper_blocks")
-    .select("sort_order")
-    .eq("newspaper_id", newspaperId)
-    .order("sort_order", { ascending: false })
-    .limit(1);
-
-  const sortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
   const config = buildConfig(blockType, formData);
+
+  // Fetch newspaper layout config and existing block positions for auto-placement
+  const { data: newspaper } = await supabase
+    .from("newspapers")
+    .select("layout_config")
+    .eq("id", newspaperId)
+    .single();
+
+  const layoutConfig = (newspaper?.layout_config ?? { format: "A4", fill_direction: "column" }) as LayoutConfig;
+  const { cols, rows } = GRID_DIMENSIONS[layoutConfig.format];
+
+  const { data: existingBlocks } = await supabase
+    .from("newspaper_blocks")
+    .select("grid_col, grid_row, col_span, row_span, sort_order")
+    .eq("newspaper_id", newspaperId)
+    .order("sort_order", { ascending: false });
+
+  const sortOrder = existingBlocks && existingBlocks.length > 0 ? existingBlocks[0].sort_order + 1 : 0;
+
+  const grid = buildOccupancyGrid(existingBlocks ?? [], cols, rows);
+  const position = findNextAvailableCell(grid, cols, rows, layoutConfig.fill_direction);
 
   const { error } = await supabase.from("newspaper_blocks").insert({
     newspaper_id: newspaperId,
@@ -118,6 +176,10 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
     title,
     config,
     sort_order: sortOrder,
+    grid_col: position?.grid_col ?? null,
+    grid_row: position?.grid_row ?? null,
+    col_span: 1,
+    row_span: 1,
   });
 
   if (error) throw new Error(error.message);
@@ -131,9 +193,20 @@ export async function updateBlock(slug: string, blockId: string, formData: FormD
   const blockType = formData.get("block_type") as string;
   const config = buildConfig(blockType, formData);
 
+  const gridColRaw = formData.get("grid_col");
+  const gridRowRaw = formData.get("grid_row");
+  const colSpanRaw = formData.get("col_span");
+  const rowSpanRaw = formData.get("row_span");
+
+  const update: Record<string, unknown> = { title, block_type: blockType, config };
+  if (gridColRaw !== null) update.grid_col = Number(gridColRaw);
+  if (gridRowRaw !== null) update.grid_row = Number(gridRowRaw);
+  if (colSpanRaw !== null) update.col_span = Number(colSpanRaw);
+  if (rowSpanRaw !== null) update.row_span = Number(rowSpanRaw);
+
   const { error } = await supabase
     .from("newspaper_blocks")
-    .update({ title, block_type: blockType, config })
+    .update(update)
     .eq("id", blockId);
 
   if (error) throw new Error(error.message);
