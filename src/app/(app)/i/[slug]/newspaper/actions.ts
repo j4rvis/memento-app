@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
 import { type FillDirection, type LayoutConfig, type PaperFormat, GRID_DIMENSIONS } from "@/modules/newspaper/lib/types";
+import { checkOverlap } from "@/modules/newspaper/lib/grid";
 
 // --- Grid auto-fill helpers ---
 
@@ -165,8 +166,21 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
 
   const sortOrder = existingBlocks && existingBlocks.length > 0 ? existingBlocks[0].sort_order + 1 : 0;
 
-  const grid = buildOccupancyGrid(existingBlocks ?? [], cols, rows);
-  const position = findNextAvailableCell(grid, cols, rows, layoutConfig.fill_direction);
+  const explicitColRaw = formData.get("grid_col");
+  const explicitRowRaw = formData.get("grid_row");
+
+  let position: { grid_col: number; grid_row: number } | null;
+  if (explicitColRaw !== null && explicitRowRaw !== null) {
+    const col = Number(explicitColRaw);
+    const row = Number(explicitRowRaw);
+    if (checkOverlap(existingBlocks ?? [], col, row, 1, 1)) {
+      throw new Error("Position conflicts with an existing block");
+    }
+    position = { grid_col: col, grid_row: row };
+  } else {
+    const grid = buildOccupancyGrid(existingBlocks ?? [], cols, rows);
+    position = findNextAvailableCell(grid, cols, rows, layoutConfig.fill_direction);
+  }
 
   const { error } = await supabase.from("newspaper_blocks").insert({
     newspaper_id: newspaperId,
@@ -210,7 +224,122 @@ export async function updateBlock(slug: string, blockId: string, formData: FormD
     .eq("id", blockId);
 
   if (error) throw new Error(error.message);
+
+  // Revalidate the specific newspaper page
+  const { data: updatedBlock } = await supabase
+    .from("newspaper_blocks")
+    .select("newspaper_id")
+    .eq("id", blockId)
+    .single();
+  if (updatedBlock?.newspaper_id) {
+    revalidatePath(`/i/${slug}/newspaper/${updatedBlock.newspaper_id}`);
+  }
   revalidatePath(`/i/${slug}/newspaper`);
+}
+
+export async function moveBlockToCell(
+  slug: string,
+  blockId: string,
+  newspaperId: string,
+  gridCol: number,
+  gridRow: number
+) {
+  const supabase = await createClient();
+
+  const { data: block } = await supabase
+    .from("newspaper_blocks")
+    .select("col_span, row_span")
+    .eq("id", blockId)
+    .single();
+
+  if (!block) throw new Error("Block not found");
+
+  const { data: newspaper } = await supabase
+    .from("newspapers")
+    .select("layout_config")
+    .eq("id", newspaperId)
+    .single();
+
+  const layoutConfig = (newspaper?.layout_config ?? { format: "A4" }) as LayoutConfig;
+  const { cols, rows } = GRID_DIMENSIONS[layoutConfig.format];
+
+  if (
+    gridCol < 0 ||
+    gridCol + block.col_span > cols ||
+    gridRow < 0 ||
+    gridRow + block.row_span > rows
+  ) {
+    throw new Error("Position out of grid bounds");
+  }
+
+  const { data: existingBlocks } = await supabase
+    .from("newspaper_blocks")
+    .select("id, grid_col, grid_row, col_span, row_span")
+    .eq("newspaper_id", newspaperId)
+    .neq("id", blockId);
+
+  if (checkOverlap(existingBlocks ?? [], gridCol, gridRow, block.col_span, block.row_span)) {
+    throw new Error("Position conflicts with an existing block");
+  }
+
+  const { error } = await supabase
+    .from("newspaper_blocks")
+    .update({ grid_col: gridCol, grid_row: gridRow })
+    .eq("id", blockId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/newspaper/${newspaperId}`);
+}
+
+export async function updateBlockSpan(
+  slug: string,
+  blockId: string,
+  newspaperId: string,
+  colSpan: number,
+  rowSpan: number
+) {
+  const supabase = await createClient();
+
+  const { data: block } = await supabase
+    .from("newspaper_blocks")
+    .select("grid_col, grid_row")
+    .eq("id", blockId)
+    .single();
+
+  if (!block) throw new Error("Block not found");
+
+  if (block.grid_col !== null && block.grid_row !== null) {
+    const { data: newspaper } = await supabase
+      .from("newspapers")
+      .select("layout_config")
+      .eq("id", newspaperId)
+      .single();
+
+    const layoutConfig = (newspaper?.layout_config ?? { format: "A4" }) as LayoutConfig;
+    const { cols, rows } = GRID_DIMENSIONS[layoutConfig.format];
+
+    if (block.grid_col + colSpan > cols || block.grid_row + rowSpan > rows) {
+      throw new Error("Span exceeds grid bounds");
+    }
+
+    const { data: existingBlocks } = await supabase
+      .from("newspaper_blocks")
+      .select("id, grid_col, grid_row, col_span, row_span")
+      .eq("newspaper_id", newspaperId)
+      .neq("id", blockId);
+
+    if (checkOverlap(existingBlocks ?? [], block.grid_col, block.grid_row, colSpan, rowSpan)) {
+      throw new Error("New span conflicts with existing blocks");
+    }
+  }
+
+  const { error } = await supabase
+    .from("newspaper_blocks")
+    .update({ col_span: colSpan, row_span: rowSpan })
+    .eq("id", blockId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/newspaper/${newspaperId}`);
 }
 
 export async function deleteBlock(slug: string, blockId: string, newspaperId: string) {

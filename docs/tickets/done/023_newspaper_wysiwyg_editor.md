@@ -105,14 +105,43 @@ The preview renders the same CSS grid as the editor but with actual block conten
 - `src/modules/newspaper/components/` — retire `AddBlockForm`, `BlockEditor`
 - `src/app/(app)/i/[slug]/newspaper/[id]/actions.ts` — add new actions
 
+## Plan
+
+1. **`src/modules/newspaper/lib/grid.ts`** — `getBlockCells`, `checkOverlap`, `buildCellMap` utilities
+2. **`src/app/(app)/i/[slug]/newspaper/actions.ts`** — add `moveBlockToCell`, `updateBlockSpan`; update `addBlock` to accept explicit position; fix `updateBlock` revalidation path
+3. **`src/modules/newspaper/components/newspaper-grid-editor.tsx`** — new client component with DnD grid, block cards, empty cells, span controls, add-block dialog, and edit-block sheet (all inline)
+4. **`src/app/(app)/i/[slug]/newspaper/[id]/page.tsx`** — swap block list for `NewspaperGridEditor`; add layout format/fill-direction selectors to settings form
+
+Implementation choices:
+- `@dnd-kit/core` for drag-and-drop (already installed); droppable = empty cells only; draggable = each block
+- `useState(initialBlocks)` + `useEffect` sync for optimistic updates
+- Edit block via shadcn Sheet (slide-in), add block via Dialog
+- Preview panel: right column on `lg+` screens showing a read-only version of the grid
+
 ## Acceptance Criteria
-- [ ] Grid renders correctly for both A4 and A5 formats
-- [ ] Blocks appear at their correct grid positions with correct spans
-- [ ] Drag-and-drop moves blocks and persists to DB
-- [ ] Span controls work for both col and row spanning
-- [ ] Overlap validation prevents invalid placements
-- [ ] Empty cells show "Add block here" placeholder
-- [ ] Clicking empty cell opens Add Block dialog with pre-filled position
-- [ ] Format switcher works (A4 ↔ A5)
-- [ ] Live preview panel updates after changes
-- [ ] Mobile shows usable fallback UI
+- [x] Grid renders correctly for both A4 and A5 formats
+- [x] Blocks appear at their correct grid positions with correct spans
+- [x] Drag-and-drop moves blocks and persists to DB
+- [x] Span controls work for both col and row spanning
+- [x] Overlap validation prevents invalid placements
+- [x] Empty cells show "Add block here" placeholder
+- [x] Clicking empty cell opens Add Block dialog with pre-filled position
+- [x] Format switcher works (A4 ↔ A5)
+- [x] Live preview panel updates after changes
+- [x] Mobile shows usable fallback UI (single-column editor, no preview panel)
+
+## Summary
+
+Replaced the linear block list editor with a visual CSS Grid editor (`NewspaperGridEditor`).
+
+**New files:**
+- `src/modules/newspaper/lib/grid.ts` — `getBlockCells`, `checkOverlap`, `buildCellMap` utilities
+- `src/modules/newspaper/components/newspaper-grid-editor.tsx` — full grid editor with DnD, span controls, add-block dialog, and edit-block sheet
+
+**Updated files:**
+- `src/app/(app)/i/[slug]/newspaper/actions.ts` — added `moveBlockToCell`, `updateBlockSpan`; updated `addBlock` to accept explicit position; fixed `updateBlock` revalidation path
+- `src/app/(app)/i/[slug]/newspaper/[id]/page.tsx` — uses `NewspaperGridEditor`; added layout format/fill-direction selectors to settings form
+
+Key details: drag-and-drop uses `@dnd-kit/core`; only empty cells are droppable; span controls allow 1↔2 col toggle and row-span ±1; overlap validation is server-side with error feedback; the right panel on `lg+` screens shows a read-only layout preview; `useEffect` syncs local state after server revalidation.
+
+Completed: 2026-03-09
