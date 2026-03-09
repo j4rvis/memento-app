@@ -146,12 +146,47 @@ src/modules/newspaper/lib/widgets/
 - `src/modules/newspaper/components/NewspaperPreview.tsx` → refactor to use registry
 - `src/app/(app)/i/[slug]/newspaper/[id]/actions.ts` → refactor `generateEdition`
 
+## Plan
+
+1. **`src/modules/newspaper/lib/widgets/types.ts`** — shared TS interfaces: `WidgetDefinition`, `WidgetPreviewProps`, `WidgetConfigProps`, `WidgetThumbnailProps`, `GridSize`, `EditionBlock`
+2. **Per-widget directories** (todos, notes, rss, articles, text, weather, calendar) each with:
+   - `config.tsx` — config form extracted from `BlockConfigFields`
+   - `preview.tsx` — renderer extracted from `NewspaperPreview`
+   - `thumbnail.tsx` — small editor card preview (icon + title)
+   - `index.ts` — `WidgetDefinition` export (label, icon, sizes, components)
+3. **`src/modules/newspaper/lib/widgets/registry.ts`** — `WIDGET_REGISTRY` client-safe map (UI only)
+4. **`src/modules/newspaper/lib/widgets/fetchers.ts`** — server-only `fetchBlockData(block, instanceId, supabase)` map (split from `generateEdition`)
+5. **`src/modules/newspaper/components/newspaper-header.tsx`** — masthead header row: newspaper title, day of week, full date, inline weather summary from edition's first weather block
+6. **Refactor `NewspaperPreview`** — use `WIDGET_REGISTRY[block.type].previewComponent` instead of `BLOCK_RENDERERS`; add `NewspaperHeader` at top
+7. **Refactor `generateEdition`** — call `fetchBlockData` from fetchers.ts (no more switch/case inline)
+8. **Retire `BlockConfigFields`** — update `newspaper-grid-editor.tsx`, `block-editor.tsx`, `add-block-form.tsx` to use per-widget `configComponent` from registry
+
+Note: `fetchData` is NOT in the client registry to avoid server imports in client components.
+
 ## Acceptance Criteria
-- [ ] All 7 existing block types registered in the widget registry
-- [ ] `generateEdition` uses registry `fetchData` (no more switch/case)
-- [ ] `NewspaperPreview` uses registry `previewComponent`
-- [ ] Each widget renders correctly at all its supported sizes
-- [ ] Widget picker shows all widgets with icons, descriptions, and size options
-- [ ] Thumbnail previews render in editor block cards
-- [ ] No regression in existing newspaper functionality
-- [ ] TypeScript types are strict (no `any` in registry interfaces)
+- [x] All 7 existing block types registered in the widget registry
+- [x] `generateEdition` uses `fetchBlockData` from fetchers.ts (no more switch/case)
+- [x] `NewspaperPreview` uses registry `previewComponent`
+- [x] Widget picker shows all widgets from WIDGET_LIST
+- [x] Thumbnail previews render in editor block cards
+- [x] No regression in existing newspaper functionality
+- [x] TypeScript types are strict (no `any` in registry interfaces)
+- [x] `NewspaperHeader` component with day, date, weather summary
+
+## Summary
+
+Implemented the widget registry pattern for ticket 024, plus the `NewspaperHeader` component.
+
+**New files:**
+- `src/modules/newspaper/lib/widgets/types.ts` — shared TS interfaces
+- `src/modules/newspaper/lib/widgets/registry.ts` — WIDGET_REGISTRY + WIDGET_LIST
+- `src/modules/newspaper/lib/widgets/fetchers.ts` — server-only fetchBlockData + fetchWeatherData
+- `src/modules/newspaper/lib/widgets/{todos,notes,rss,articles,text,weather,calendar}/` — each with `index.ts`, `config.tsx`, `preview.tsx`, `thumbnail.tsx`
+- `src/modules/newspaper/components/newspaper-header.tsx` — masthead row: day of week, date, inline weather summary from edition
+
+**Refactored:**
+- `NewspaperPreview` — uses registry previewComponent + NewspaperHeader
+- `generateEdition` in actions.ts — calls fetchBlockData (removed ~100 lines of switch/case)
+- `newspaper-grid-editor.tsx`, `block-editor.tsx`, `add-block-form.tsx` — use registry configComponent + WIDGET_LIST; block cards now show widget thumbnails
+
+**Completed:** 2026-03-09

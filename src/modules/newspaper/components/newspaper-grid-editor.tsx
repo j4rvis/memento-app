@@ -39,11 +39,8 @@ import {
   ChevronsLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  BlockConfigFields,
-  type FeedOption,
-  type ArticleOption,
-} from "./block-config-fields";
+import { WIDGET_REGISTRY, WIDGET_LIST } from "@/modules/newspaper/lib/widgets/registry";
+import type { FeedOption, ArticleOption } from "@/modules/newspaper/lib/widgets/types";
 import {
   addBlock,
   deleteBlock,
@@ -55,15 +52,6 @@ import { GRID_DIMENSIONS, type PaperFormat } from "@/modules/newspaper/lib/types
 import { buildCellMap } from "@/modules/newspaper/lib/grid";
 import { cn } from "@/lib/utils";
 
-const BLOCK_TYPES = [
-  { value: "weather", label: "Weather" },
-  { value: "rss", label: "RSS Feed" },
-  { value: "notes", label: "Notes" },
-  { value: "text", label: "Static Text" },
-  { value: "articles", label: "Articles" },
-  { value: "todos", label: "Todos" },
-  { value: "calendar", label: "Calendar" },
-];
 
 type Block = {
   id: string;
@@ -190,6 +178,18 @@ function DraggableBlockCard({
         </button>
       </div>
 
+      {/* Thumbnail */}
+      {(() => {
+        const widget = WIDGET_REGISTRY[block.block_type];
+        if (!widget) return null;
+        const Thumb = widget.thumbnailComponent;
+        return (
+          <div className="flex-1 min-h-0 overflow-hidden text-muted-foreground">
+            <Thumb title={block.title} config={block.config as Record<string, unknown>} />
+          </div>
+        );
+      })()}
+
       {/* Span controls */}
       <div className="flex items-center gap-1 mt-auto pt-1 border-t border-dashed border-muted-foreground/20">
         {/* Col span toggle */}
@@ -262,7 +262,7 @@ function AddBlockDialog({
   const [title, setTitle] = useState("Static Text");
 
   function handleTypeChange(newType: string) {
-    const found = BLOCK_TYPES.find((t) => t.value === newType);
+    const found = WIDGET_REGISTRY[newType];
     setBlockType(newType);
     setTitle(found?.label ?? newType);
   }
@@ -308,9 +308,9 @@ function AddBlockDialog({
               onChange={(e) => handleTypeChange(e.target.value)}
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             >
-              {BLOCK_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {WIDGET_LIST.map((w) => (
+                <option key={w.type} value={w.type}>
+                  {w.label}
                 </option>
               ))}
             </select>
@@ -325,12 +325,12 @@ function AddBlockDialog({
             />
           </div>
 
-          <BlockConfigFields
-            key={blockType}
-            blockType={blockType}
-            feeds={feeds}
-            articles={articles}
-          />
+          {(() => {
+            const widget = WIDGET_REGISTRY[blockType];
+            if (!widget) return null;
+            const Config = widget.configComponent;
+            return <Config key={blockType} feeds={feeds} articles={articles} />;
+          })()}
 
           <DialogFooter>
             <Button
@@ -369,7 +369,7 @@ function EditBlockSheet({
   const [activeConfig, setActiveConfig] = useState(block.config);
 
   function handleTypeChange(newType: string) {
-    const found = BLOCK_TYPES.find((t) => t.value === newType);
+    const found = WIDGET_REGISTRY[newType];
     setBlockType(newType);
     setTitle(found?.label ?? newType);
     setActiveConfig({});
@@ -393,9 +393,9 @@ function EditBlockSheet({
           onChange={(e) => handleTypeChange(e.target.value)}
           className="w-full rounded-md border bg-background px-3 py-2 text-sm"
         >
-          {BLOCK_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          {WIDGET_LIST.map((w) => (
+            <option key={w.type} value={w.type}>
+              {w.label}
             </option>
           ))}
         </select>
@@ -410,13 +410,12 @@ function EditBlockSheet({
         />
       </div>
 
-      <BlockConfigFields
-        key={configKey}
-        blockType={blockType}
-        config={activeConfig}
-        feeds={feeds}
-        articles={articles}
-      />
+      {(() => {
+        const widget = WIDGET_REGISTRY[blockType];
+        if (!widget) return null;
+        const Config = widget.configComponent;
+        return <Config key={configKey} config={activeConfig} feeds={feeds} articles={articles} />;
+      })()}
 
       <div className="flex gap-2 pt-2">
         <SubmitButton>Save</SubmitButton>

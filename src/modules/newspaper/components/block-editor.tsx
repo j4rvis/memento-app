@@ -9,17 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { deleteBlock, moveBlock, updateBlock } from "@/app/(app)/i/[slug]/newspaper/actions";
-import { BlockConfigFields, type FeedOption, type ArticleOption } from "./block-config-fields";
+import { WIDGET_REGISTRY, WIDGET_LIST } from "@/modules/newspaper/lib/widgets/registry";
+import type { FeedOption, ArticleOption } from "@/modules/newspaper/lib/widgets/types";
 
-const BLOCK_TYPES = [
-  { value: "weather", label: "Weather" },
-  { value: "rss", label: "RSS Feed" },
-  { value: "notes", label: "Notes" },
-  { value: "text", label: "Static Text" },
-  { value: "articles", label: "Articles" },
-  { value: "todos", label: "Todos" },
-  { value: "calendar", label: "Calendar" },
-];
 
 interface Block {
   id: string;
@@ -52,7 +44,7 @@ export function BlockEditor({
   const [activeConfig, setActiveConfig] = useState(block.config);
 
   function handleTypeChange(newType: string) {
-    const found = BLOCK_TYPES.find((t) => t.value === newType);
+    const found = WIDGET_REGISTRY[newType];
     setBlockType(newType);
     setTitle(found?.label ?? newType);
     setActiveConfig({});
@@ -121,8 +113,8 @@ export function BlockEditor({
                 onChange={(e) => handleTypeChange(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
               >
-                {BLOCK_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                {WIDGET_LIST.map((w) => (
+                  <option key={w.type} value={w.type}>{w.label}</option>
                 ))}
               </select>
             </div>
@@ -135,13 +127,12 @@ export function BlockEditor({
                 className="h-8 text-sm"
               />
             </div>
-            <BlockConfigFields
-              key={configKey}
-              blockType={blockType}
-              config={activeConfig}
-              feeds={feeds}
-              articles={articles}
-            />
+            {(() => {
+              const widget = WIDGET_REGISTRY[blockType];
+              if (!widget) return null;
+              const Config = widget.configComponent;
+              return <Config key={configKey} config={activeConfig} feeds={feeds} articles={articles} />;
+            })()}
             <SubmitButton size="sm" variant="outline">
               Update
             </SubmitButton>

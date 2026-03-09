@@ -6,18 +6,9 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addBlock } from "@/app/(app)/i/[slug]/newspaper/actions";
-import { BlockConfigFields, type FeedOption, type ArticleOption } from "./block-config-fields";
 import { Plus } from "lucide-react";
-
-const BLOCK_TYPES = [
-  { value: "weather", label: "Weather" },
-  { value: "rss", label: "RSS Feed" },
-  { value: "notes", label: "Notes" },
-  { value: "text", label: "Static Text" },
-  { value: "articles", label: "Articles" },
-  { value: "todos", label: "Todos" },
-  { value: "calendar", label: "Calendar" },
-];
+import { WIDGET_REGISTRY, WIDGET_LIST } from "@/modules/newspaper/lib/widgets/registry";
+import type { FeedOption, ArticleOption } from "@/modules/newspaper/lib/widgets/types";
 
 export function AddBlockForm({
   newspaperId,
@@ -35,7 +26,7 @@ export function AddBlockForm({
   const [title, setTitle] = useState("Static Text");
 
   function handleTypeChange(newType: string) {
-    const found = BLOCK_TYPES.find((t) => t.value === newType);
+    const found = WIDGET_REGISTRY[newType];
     setBlockType(newType);
     setTitle(found?.label ?? newType);
   }
@@ -65,8 +56,8 @@ export function AddBlockForm({
           onChange={(e) => handleTypeChange(e.target.value)}
           className="w-full rounded-md border bg-background px-3 py-2 text-sm"
         >
-          {BLOCK_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+          {WIDGET_LIST.map((w) => (
+            <option key={w.type} value={w.type}>{w.label}</option>
           ))}
         </select>
       </div>
@@ -78,12 +69,12 @@ export function AddBlockForm({
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
-      <BlockConfigFields
-        key={blockType}
-        blockType={blockType}
-        feeds={feeds}
-        articles={articles}
-      />
+      {(() => {
+        const widget = WIDGET_REGISTRY[blockType];
+        if (!widget) return null;
+        const Config = widget.configComponent;
+        return <Config key={blockType} feeds={feeds} articles={articles} />;
+      })()}
       <div className="flex gap-2">
         <SubmitButton>Add Block</SubmitButton>
         <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
