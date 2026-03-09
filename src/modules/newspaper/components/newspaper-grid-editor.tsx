@@ -37,6 +37,7 @@ import {
   Settings2,
   Minus,
   ChevronsLeftRight,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { WIDGET_REGISTRY, WIDGET_LIST } from "@/modules/newspaper/lib/widgets/registry";
@@ -64,6 +65,7 @@ type Block = {
   grid_row: number | null;
   col_span: number;
   row_span: number;
+  page_index: number;
 };
 
 type Newspaper = {
@@ -74,15 +76,17 @@ type Newspaper = {
 // ---- DroppableCell ----
 
 function DroppableCell({
+  pageIndex,
   row,
   col,
   onClick,
 }: {
+  pageIndex: number;
   row: number;
   col: number;
   onClick: () => void;
 }) {
-  const { isOver, setNodeRef } = useDroppable({ id: `cell-${row}-${col}` });
+  const { isOver, setNodeRef } = useDroppable({ id: `cell-${pageIndex}-${row}-${col}` });
 
   return (
     <div
@@ -245,6 +249,7 @@ function AddBlockDialog({
   open,
   onOpenChange,
   position,
+  pageIndex,
   newspaperId,
   slug,
   feeds,
@@ -253,6 +258,7 @@ function AddBlockDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   position: { col: number; row: number } | null;
+  pageIndex: number;
   newspaperId: string;
   slug: string;
   feeds: FeedOption[];
@@ -282,8 +288,8 @@ function AddBlockDialog({
           <DialogTitle>
             Add Block
             {position
-              ? ` — row ${position.row + 1}, col ${position.col + 1}`
-              : ""}
+              ? ` — page ${pageIndex + 1}, row ${position.row + 1}, col ${position.col + 1}`
+              : ` — page ${pageIndex + 1}`}
           </DialogTitle>
         </DialogHeader>
         <form
@@ -293,6 +299,7 @@ function AddBlockDialog({
           }}
           className="space-y-4"
         >
+          <input type="hidden" name="page_index" value={pageIndex} />
           {position && (
             <>
               <input type="hidden" name="grid_col" value={position.col} />
@@ -427,16 +434,32 @@ function EditBlockSheet({
   );
 }
 
-// ---- GridPreview (read-only) ----
+// ---- PageCanvas ----
 
-function GridPreview({
+function PageCanvas({
+  pageIndex,
   blocks,
   cols,
   rows,
+  onCellClick,
+  onEdit,
+  onDelete,
+  onIncRowSpan,
+  onDecRowSpan,
+  onToggleColSpan,
+  canExpandColSpan,
 }: {
+  pageIndex: number;
   blocks: Block[];
   cols: number;
   rows: number;
+  onCellClick: (pageIndex: number, col: number, row: number) => void;
+  onEdit: (block: Block) => void;
+  onDelete: (block: Block) => void;
+  onIncRowSpan: (block: Block) => void;
+  onDecRowSpan: (block: Block) => void;
+  onToggleColSpan: (block: Block) => void;
+  canExpandColSpan: (block: Block) => boolean;
 }) {
   const placedBlocks = blocks.filter(
     (b) => b.grid_col !== null && b.grid_row !== null
@@ -445,42 +468,114 @@ function GridPreview({
 
   return (
     <div
-      className="grid gap-2 h-full"
+      className="grid gap-2"
       style={{
         gridTemplateColumns: "1fr 1fr",
-        gridTemplateRows: `repeat(${rows}, minmax(80px, 1fr))`,
+        gridTemplateRows: `repeat(${rows}, minmax(120px, auto))`,
       }}
     >
+      {/* Placed blocks */}
       {placedBlocks.map((block) => (
-        <div
+        <DraggableBlockCard
           key={block.id}
-          className="rounded-lg border bg-muted/30 p-2 flex flex-col gap-1 overflow-hidden"
-          style={{
-            gridColumn: `${block.grid_col! + 1} / span ${block.col_span}`,
-            gridRow: `${block.grid_row! + 1} / span ${block.row_span}`,
-          }}
-        >
-          <Badge variant="secondary" className="text-[10px] px-1 py-0 w-fit">
-            {block.block_type}
-          </Badge>
-          <span className="text-xs font-medium truncate">{block.title}</span>
-        </div>
+          block={block}
+          onEdit={() => onEdit(block)}
+          onDelete={() => onDelete(block)}
+          onIncRowSpan={() => onIncRowSpan(block)}
+          onDecRowSpan={() => onDecRowSpan(block)}
+          onToggleColSpan={() => onToggleColSpan(block)}
+          canExpandCol={canExpandColSpan(block)}
+        />
       ))}
+
+      {/* Empty cells */}
       {Array.from(cellMap.entries())
         .filter(([, status]) => status === "empty")
         .map(([key]) => {
           const [rowStr, colStr] = key.split("-");
+          const r = parseInt(rowStr);
+          const c = parseInt(colStr);
           return (
-            <div
+            <DroppableCell
               key={key}
-              className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/10"
-              style={{
-                gridColumn: `${parseInt(colStr) + 1}`,
-                gridRow: `${parseInt(rowStr) + 1}`,
-              }}
+              pageIndex={pageIndex}
+              row={r}
+              col={c}
+              onClick={() => onCellClick(pageIndex, c, r)}
             />
           );
         })}
+    </div>
+  );
+}
+
+// ---- GridPreview (read-only) ----
+
+function GridPreview({
+  blocks,
+  cols,
+  rows,
+  pageCount,
+}: {
+  blocks: Block[];
+  cols: number;
+  rows: number;
+  pageCount: number;
+}) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: pageCount }, (_, pageIdx) => {
+        const pageBlocks = blocks.filter(
+          (b) => (b.page_index ?? 0) === pageIdx && b.grid_col !== null && b.grid_row !== null
+        );
+        const cellMap = buildCellMap(pageBlocks, cols, rows);
+
+        return (
+          <div key={pageIdx}>
+            {pageIdx > 0 && (
+              <p className="text-[10px] text-muted-foreground text-center mb-1">Page {pageIdx + 1}</p>
+            )}
+            <div
+              className="grid gap-1"
+              style={{
+                gridTemplateColumns: "1fr 1fr",
+                gridTemplateRows: `repeat(${rows}, minmax(40px, 1fr))`,
+              }}
+            >
+              {pageBlocks.map((block) => (
+                <div
+                  key={block.id}
+                  className="rounded border bg-muted/30 p-1 flex flex-col gap-0.5 overflow-hidden"
+                  style={{
+                    gridColumn: `${block.grid_col! + 1} / span ${block.col_span}`,
+                    gridRow: `${block.grid_row! + 1} / span ${block.row_span}`,
+                  }}
+                >
+                  <Badge variant="secondary" className="text-[9px] px-0.5 py-0 w-fit">
+                    {block.block_type}
+                  </Badge>
+                  <span className="text-[10px] font-medium truncate">{block.title}</span>
+                </div>
+              ))}
+              {Array.from(cellMap.entries())
+                .filter(([, status]) => status === "empty")
+                .map(([key]) => {
+                  const [rowStr, colStr] = key.split("-");
+                  return (
+                    <div
+                      key={key}
+                      className="rounded border border-dashed border-muted-foreground/20 bg-muted/10"
+                      style={{
+                        gridColumn: `${parseInt(colStr) + 1}`,
+                        gridRow: `${parseInt(rowStr) + 1}`,
+                      }}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -506,13 +601,23 @@ export function NewspaperGridEditor({
     col: number;
     row: number;
   } | null>(null);
+  const [addPageIndex, setAddPageIndex] = useState(0);
   const [editBlock, setEditBlock] = useState<Block | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [, startTrans] = useTransition();
 
+  // Derived page count: max page_index across all blocks + 1, minimum 1
+  const derivedPageCount = blocks.length > 0
+    ? Math.max(...blocks.map((b) => b.page_index ?? 0)) + 1
+    : 1;
+  // extraPages tracks UI-only empty pages appended after the last page with blocks
+  const [extraPages, setExtraPages] = useState(0);
+  const pageCount = derivedPageCount + extraPages;
+
   // Sync local state with server-rendered data after revalidation
   useEffect(() => {
     setBlocks(initialBlocks);
+    setExtraPages(0);
   }, [initialBlocks]);
 
   const sensors = useSensors(
@@ -525,13 +630,9 @@ export function NewspaperGridEditor({
   const format = layoutCfg.format ?? "A4";
   const { cols, rows } = GRID_DIMENSIONS[format];
 
-  const placedBlocks = blocks.filter(
-    (b) => b.grid_col !== null && b.grid_row !== null
-  );
   const unplacedBlocks = blocks.filter(
     (b) => b.grid_col === null || b.grid_row === null
   );
-  const cellMap = buildCellMap(placedBlocks, cols, rows);
 
   const activeBlock = activeId ? blocks.find((b) => b.id === activeId) : null;
 
@@ -547,24 +648,26 @@ export function NewspaperGridEditor({
 
     const blockId = active.id as string;
     const parts = String(over.id).split("-");
-    const row = parseInt(parts[1]);
-    const col = parseInt(parts[2]);
+    // id format: cell-{page}-{row}-{col}
+    const page = parseInt(parts[1]);
+    const row = parseInt(parts[2]);
+    const col = parseInt(parts[3]);
 
     const block = blocks.find((b) => b.id === blockId);
     if (!block) return;
-    if (block.grid_col === col && block.grid_row === row) return;
+    if (block.grid_col === col && block.grid_row === row && (block.page_index ?? 0) === page) return;
 
     // Optimistic update
     const prevBlocks = blocks;
     setBlocks((prev) =>
       prev.map((b) =>
-        b.id === blockId ? { ...b, grid_col: col, grid_row: row } : b
+        b.id === blockId ? { ...b, grid_col: col, grid_row: row, page_index: page } : b
       )
     );
 
     startTrans(async () => {
       try {
-        await moveBlockToCell(slug, blockId, block.newspaper_id, col, row);
+        await moveBlockToCell(slug, blockId, block.newspaper_id, col, row, page);
       } catch (e) {
         setBlocks(prevBlocks);
         toast.error(
@@ -616,11 +719,31 @@ export function NewspaperGridEditor({
   function canExpandColSpan(block: Block): boolean {
     if (block.col_span === 2) return false;
     if (block.grid_col !== 0) return false;
-    // Check that col 1 is free for all rows in this block
+    const pageBlocks = blocks.filter(
+      (b) => (b.page_index ?? 0) === (block.page_index ?? 0) && b.grid_col !== null && b.grid_row !== null
+    );
+    const cellMap = buildCellMap(pageBlocks, cols, rows);
     for (let r = block.grid_row!; r < block.grid_row! + block.row_span; r++) {
       if (cellMap.get(`${r}-1`) !== "empty") return false;
     }
     return true;
+  }
+
+  function handleAddPage() {
+    setExtraPages((p) => p + 1);
+  }
+
+  function handleRemovePage(pageIdx: number) {
+    const hasBlocks = blocks.some((b) => (b.page_index ?? 0) === pageIdx);
+    if (hasBlocks) {
+      toast.error("Remove all blocks from this page before removing it");
+      return;
+    }
+    // Only allow removing the last page
+    if (pageIdx !== pageCount - 1) return;
+    if (extraPages > 0) {
+      setExtraPages((p) => p - 1);
+    }
   }
 
   return (
@@ -636,61 +759,76 @@ export function NewspaperGridEditor({
             onDragEnd={handleDragEnd}
             onDragCancel={() => setActiveId(null)}
           >
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: "1fr 1fr",
-                gridTemplateRows: `repeat(${rows}, minmax(120px, auto))`,
-              }}
-            >
-              {/* Placed blocks */}
-              {placedBlocks.map((block) => (
-                <DraggableBlockCard
-                  key={block.id}
-                  block={block}
-                  onEdit={() => setEditBlock(block)}
-                  onDelete={() => handleDelete(block)}
-                  onIncRowSpan={() =>
-                    handleSpanChange(block, block.col_span, block.row_span + 1)
-                  }
-                  onDecRowSpan={() =>
-                    handleSpanChange(
-                      block,
-                      block.col_span,
-                      Math.max(1, block.row_span - 1)
-                    )
-                  }
-                  onToggleColSpan={() =>
-                    handleSpanChange(
-                      block,
-                      block.col_span === 2 ? 1 : 2,
-                      block.row_span
-                    )
-                  }
-                  canExpandCol={canExpandColSpan(block)}
-                />
-              ))}
+            {Array.from({ length: pageCount }, (_, pageIdx) => {
+              const pageBlocks = blocks.filter((b) => (b.page_index ?? 0) === pageIdx);
+              const isLastPage = pageIdx === pageCount - 1;
+              const pageHasBlocks = pageBlocks.some((b) => b.grid_col !== null && b.grid_row !== null);
 
-              {/* Empty cells */}
-              {Array.from(cellMap.entries())
-                .filter(([, status]) => status === "empty")
-                .map(([key]) => {
-                  const [rowStr, colStr] = key.split("-");
-                  const r = parseInt(rowStr);
-                  const c = parseInt(colStr);
-                  return (
-                    <DroppableCell
-                      key={key}
-                      row={r}
-                      col={c}
-                      onClick={() => {
-                        setAddPosition({ col: c, row: r });
-                        setAddDialogOpen(true);
-                      }}
-                    />
-                  );
-                })}
-            </div>
+              return (
+                <div key={pageIdx} className="space-y-2">
+                  {/* Page divider (not before first page) */}
+                  {pageIdx > 0 && (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="flex-1 border-t border-dashed border-muted-foreground/40" />
+                      <span className="text-xs font-medium text-muted-foreground shrink-0">
+                        Page {pageIdx + 1}
+                      </span>
+                      <div className="flex-1 border-t border-dashed border-muted-foreground/40" />
+                      {isLastPage && !pageHasBlocks && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive shrink-0"
+                          onClick={() => handleRemovePage(pageIdx)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  <PageCanvas
+                    pageIndex={pageIdx}
+                    blocks={pageBlocks}
+                    cols={cols}
+                    rows={rows}
+                    onCellClick={(pi, c, r) => {
+                      setAddPageIndex(pi);
+                      setAddPosition({ col: c, row: r });
+                      setAddDialogOpen(true);
+                    }}
+                    onEdit={setEditBlock}
+                    onDelete={handleDelete}
+                    onIncRowSpan={(block) =>
+                      handleSpanChange(block, block.col_span, block.row_span + 1)
+                    }
+                    onDecRowSpan={(block) =>
+                      handleSpanChange(block, block.col_span, Math.max(1, block.row_span - 1))
+                    }
+                    onToggleColSpan={(block) =>
+                      handleSpanChange(block, block.col_span === 2 ? 1 : 2, block.row_span)
+                    }
+                    canExpandColSpan={canExpandColSpan}
+                  />
+
+                  {/* Add block button for this page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setAddPageIndex(pageIdx);
+                      setAddPosition(null);
+                      setAddDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    Add Block to Page {pageIdx + 1}
+                  </Button>
+                </div>
+              );
+            })}
 
             <DragOverlay modifiers={[restrictToWindowEdges]}>
               {activeBlock && (
@@ -734,17 +872,14 @@ export function NewspaperGridEditor({
             </div>
           )}
 
-          {/* Add block button */}
+          {/* Add Page button */}
           <Button
             variant="outline"
-            className="w-full"
-            onClick={() => {
-              setAddPosition(null);
-              setAddDialogOpen(true);
-            }}
+            className="w-full border-dashed"
+            onClick={handleAddPage}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Block
+            <FileText className="mr-2 h-4 w-4" />
+            Add Page
           </Button>
         </div>
 
@@ -754,10 +889,10 @@ export function NewspaperGridEditor({
             Layout Preview
           </p>
           <div className="rounded-lg border bg-muted/20 p-3">
-            <GridPreview blocks={blocks} cols={cols} rows={rows} />
+            <GridPreview blocks={blocks} cols={cols} rows={rows} pageCount={pageCount} />
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            {format} · {cols} col × {rows} row
+            {format} · {cols} col × {rows} row · {pageCount} page{pageCount !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
@@ -770,6 +905,7 @@ export function NewspaperGridEditor({
           if (!open) setAddPosition(null);
         }}
         position={addPosition}
+        pageIndex={addPageIndex}
         newspaperId={newspaper.id}
         slug={slug}
         feeds={feeds}

@@ -134,6 +134,11 @@ function buildConfig(blockType: string, formData: FormData): Record<string, unkn
     }
     case "calendar":
       return { days_ahead: Number(formData.get("config_days_ahead") || 7) };
+    case "header":
+      return {
+        location: (formData.get("config_location") as string) || "",
+        tagline: (formData.get("config_tagline") as string) || "",
+      };
     default:
       return {};
   }
@@ -159,13 +164,18 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
   const layoutConfig = (newspaper?.layout_config ?? { format: "A4", fill_direction: "column" }) as LayoutConfig;
   const { cols, rows } = GRID_DIMENSIONS[layoutConfig.format];
 
+  const pageIndex = Number(formData.get("page_index") ?? 0);
+
   const { data: existingBlocks } = await supabase
     .from("newspaper_blocks")
-    .select("grid_col, grid_row, col_span, row_span, sort_order")
+    .select("grid_col, grid_row, col_span, row_span, sort_order, page_index")
     .eq("newspaper_id", newspaperId)
     .order("sort_order", { ascending: false });
 
   const sortOrder = existingBlocks && existingBlocks.length > 0 ? existingBlocks[0].sort_order + 1 : 0;
+
+  // Overlap checks are scoped to the same page
+  const samePageBlocks = (existingBlocks ?? []).filter((b) => (b.page_index ?? 0) === pageIndex);
 
   const explicitColRaw = formData.get("grid_col");
   const explicitRowRaw = formData.get("grid_row");
@@ -174,12 +184,12 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
   if (explicitColRaw !== null && explicitRowRaw !== null) {
     const col = Number(explicitColRaw);
     const row = Number(explicitRowRaw);
-    if (checkOverlap(existingBlocks ?? [], col, row, 1, 1)) {
+    if (checkOverlap(samePageBlocks, col, row, 1, 1)) {
       throw new Error("Position conflicts with an existing block");
     }
     position = { grid_col: col, grid_row: row };
   } else {
-    const grid = buildOccupancyGrid(existingBlocks ?? [], cols, rows);
+    const grid = buildOccupancyGrid(samePageBlocks, cols, rows);
     position = findNextAvailableCell(grid, cols, rows, layoutConfig.fill_direction);
   }
 
@@ -195,6 +205,7 @@ export async function addBlock(slug: string, newspaperId: string, formData: Form
     grid_row: position?.grid_row ?? null,
     col_span: 1,
     row_span: 1,
+    page_index: pageIndex,
   });
 
   if (error) throw new Error(error.message);
@@ -243,17 +254,20 @@ export async function moveBlockToCell(
   blockId: string,
   newspaperId: string,
   gridCol: number,
-  gridRow: number
+  gridRow: number,
+  pageIndex?: number
 ) {
   const supabase = await createClient();
 
   const { data: block } = await supabase
     .from("newspaper_blocks")
-    .select("col_span, row_span")
+    .select("col_span, row_span, page_index")
     .eq("id", blockId)
     .single();
 
   if (!block) throw new Error("Block not found");
+
+  const targetPage = pageIndex ?? (block.page_index ?? 0);
 
   const { data: newspaper } = await supabase
     .from("newspapers")
@@ -275,17 +289,19 @@ export async function moveBlockToCell(
 
   const { data: existingBlocks } = await supabase
     .from("newspaper_blocks")
-    .select("id, grid_col, grid_row, col_span, row_span")
+    .select("id, grid_col, grid_row, col_span, row_span, page_index")
     .eq("newspaper_id", newspaperId)
     .neq("id", blockId);
 
-  if (checkOverlap(existingBlocks ?? [], gridCol, gridRow, block.col_span, block.row_span)) {
+  const samePageBlocks = (existingBlocks ?? []).filter((b) => (b.page_index ?? 0) === targetPage);
+
+  if (checkOverlap(samePageBlocks, gridCol, gridRow, block.col_span, block.row_span)) {
     throw new Error("Position conflicts with an existing block");
   }
 
   const { error } = await supabase
     .from("newspaper_blocks")
-    .update({ grid_col: gridCol, grid_row: gridRow })
+    .update({ grid_col: gridCol, grid_row: gridRow, page_index: targetPage })
     .eq("id", blockId);
 
   if (error) throw new Error(error.message);
@@ -303,7 +319,7 @@ export async function updateBlockSpan(
 
   const { data: block } = await supabase
     .from("newspaper_blocks")
-    .select("grid_col, grid_row")
+    .select("grid_col, grid_row, page_index")
     .eq("id", blockId)
     .single();
 
@@ -325,11 +341,15 @@ export async function updateBlockSpan(
 
     const { data: existingBlocks } = await supabase
       .from("newspaper_blocks")
-      .select("id, grid_col, grid_row, col_span, row_span")
+      .select("id, grid_col, grid_row, col_span, row_span, page_index")
       .eq("newspaper_id", newspaperId)
       .neq("id", blockId);
 
-    if (checkOverlap(existingBlocks ?? [], block.grid_col, block.grid_row, colSpan, rowSpan)) {
+    const samePageBlocks = (existingBlocks ?? []).filter(
+      (b) => (b.page_index ?? 0) === (block.page_index ?? 0)
+    );
+
+    if (checkOverlap(samePageBlocks, block.grid_col, block.grid_row, colSpan, rowSpan)) {
       throw new Error("New span conflicts with existing blocks");
     }
   }
@@ -413,7 +433,7 @@ export async function generateEdition(slug: string, newspaperId: string) {
       instanceId,
       supabase
     );
-    content.push({ type: block.block_type, title: block.title, config: block.config, data });
+    content.push({ type: block.block_type, title: block.title, config: block.config, data, page_index: block.page_index ?? 0 });
   }
 
   const now = new Date();

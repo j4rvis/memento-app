@@ -155,6 +155,11 @@ export async function fetchBlockData(
       const config = block.config as { location?: string };
       return fetchWeatherData(config.location || "Unknown");
     }
+    case "header": {
+      const config = block.config as { location?: string };
+      if (config.location) return fetchWeatherData(config.location);
+      return null;
+    }
     case "calendar": {
       const config = block.config as { days_ahead?: number };
       const daysAhead = config.days_ahead ?? 7;

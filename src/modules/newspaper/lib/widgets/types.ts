@@ -5,6 +5,7 @@ export interface EditionBlock {
   title: string;
   config: Record<string, unknown>;
   data: unknown;
+  page_index?: number;
 }
 
 export interface FeedOption {

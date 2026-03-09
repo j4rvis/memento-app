@@ -42,40 +42,76 @@ export function NewspaperPreview({
   const leadingClass = LINE_HEIGHT_CLASS[printConfig.line_height ?? "relaxed"] ?? "leading-relaxed";
   const twoCol = (printConfig.columns ?? "1") === "2";
 
+  // Group blocks by page_index
+  const pageMap = new Map<number, EditionBlock[]>();
+  for (const block of edition.content) {
+    const pi = block.page_index ?? 0;
+    if (!pageMap.has(pi)) pageMap.set(pi, []);
+    pageMap.get(pi)!.push(block);
+  }
+  const pageIndices = Array.from(pageMap.keys()).sort((a, b) => a - b);
+  // Ensure at least page 0 exists
+  if (pageIndices.length === 0) pageIndices.push(0);
+
   return (
     <div className={`mx-auto max-w-2xl bg-white dark:bg-card print:bg-white print:text-black print:max-w-none ${fontClass} ${sizeClass} ${leadingClass}`}>
-      <div className="border-b-4 border-double border-black dark:border-foreground py-6 text-center print:border-black">
-        <h1 className="text-4xl font-bold font-serif">{edition.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground print:text-gray-600">
-          {formatDate(edition.generated_at)}
-        </p>
-      </div>
+      {pageIndices.map((pageIdx, i) => {
+        const pageBlocks = pageMap.get(pageIdx) ?? [];
+        const isFirstPage = i === 0;
 
-      <div
-        className="py-4"
-        style={twoCol ? { columnCount: 2, columnGap: "2.5rem" } : undefined}
-      >
-        {edition.content.map((block, i) => {
-          const widget = WIDGET_REGISTRY[block.type];
-          if (!widget) return null;
-          const Preview = widget.previewComponent;
-          return (
+        return (
+          <div
+            key={pageIdx}
+            className={!isFirstPage ? "print:break-before-page" : undefined}
+            style={!isFirstPage ? { breakBefore: "page" } : undefined}
+          >
+            {/* On-screen page separator (not before first page) */}
+            {!isFirstPage && (
+              <div className="flex items-center gap-3 my-8 print:hidden">
+                <div className="flex-1 border-t-2 border-double border-muted-foreground/40" />
+                <span className="text-xs font-medium text-muted-foreground px-2">— Page {pageIdx + 1} —</span>
+                <div className="flex-1 border-t-2 border-double border-muted-foreground/40" />
+              </div>
+            )}
+
+            {/* Masthead — only on page 0 unless there's a header block */}
+            {isFirstPage && !pageBlocks.some((b) => b.type === "header") && (
+              <div className="border-b-4 border-double border-black dark:border-foreground py-6 text-center print:border-black">
+                <h1 className="text-4xl font-bold font-serif">{edition.title}</h1>
+                <p className="mt-1 text-sm text-muted-foreground print:text-gray-600">
+                  {formatDate(edition.generated_at)}
+                </p>
+              </div>
+            )}
+
             <div
-              key={i}
-              className={twoCol ? "pb-6 mb-4 break-inside-avoid" : "py-4 border-b"}
-              style={twoCol ? { breakInside: "avoid", pageBreakInside: "avoid" } : undefined}
+              className="py-4"
+              style={twoCol ? { columnCount: 2, columnGap: "2.5rem" } : undefined}
             >
-              <Preview block={block} />
+              {pageBlocks.map((block, j) => {
+                const widget = WIDGET_REGISTRY[block.type];
+                if (!widget) return null;
+                const Preview = widget.previewComponent;
+                return (
+                  <div
+                    key={j}
+                    className={twoCol ? "pb-6 mb-4 break-inside-avoid" : "py-4 border-b"}
+                    style={twoCol ? { breakInside: "avoid", pageBreakInside: "avoid" } : undefined}
+                  >
+                    <Preview block={block} />
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
 
-      {edition.content.length === 0 && (
-        <p className="py-8 text-center text-muted-foreground">
-          This edition has no content blocks.
-        </p>
-      )}
+            {pageBlocks.length === 0 && isFirstPage && edition.content.length === 0 && (
+              <p className="py-8 text-center text-muted-foreground">
+                This edition has no content blocks.
+              </p>
+            )}
+          </div>
+        );
+      })}
 
       <Separator />
       <p className="py-4 text-center text-xs text-muted-foreground">
