@@ -226,6 +226,7 @@ export default async function NewspaperDetailPage({
             >
               <option value="1">Single</option>
               <option value="2">Two columns</option>
+              <option value="3">Three columns</option>
             </select>
           </div>
         </div>

@@ -42,17 +42,90 @@ export default async function PreviewPage({
 
   return (
     <>
+      {/* Google Fonts for newspaper typography */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap"
+      />
+
       <style>{`
+        /* Drop cap for first letter of editorial paragraphs */
+        .np-drop-cap::first-letter {
+          float: left;
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: 3.4em;
+          font-weight: 900;
+          line-height: 0.78;
+          margin-right: 0.06em;
+          margin-top: 0.04em;
+          color: inherit;
+        }
+
         @media print {
-          [data-sidebar="sidebar"],
-          [data-slot="sidebar-gap"],
+          /*
+           * Layout-flattening approach (correct for multi-page print):
+           * Keep #np-print-target in document flow so content naturally
+           * flows across pages. Strip the surrounding app chrome by
+           * targeting its known data-slot attributes and HTML elements.
+           */
+
+          /* 1. Flatten SidebarProvider wrapper (flex → block) */
+          [data-slot="sidebar-wrapper"] {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          /* 2. Hide sidebar rail and gap */
+          [data-slot="sidebar"],
+          [data-slot="sidebar-gap"] {
+            display: none !important;
+          }
+
+          /* 3. SidebarInset <main>: remove inset shadow/rounding, make block */
+          [data-slot="sidebar-inset"] {
+            display: block !important;
+            width: 100% !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+          }
+
+          /* 4. Hide app header and bottom nav */
           header,
           nav {
             display: none !important;
           }
-          main {
+
+          /* 5. Inner <main> and its wrapper: remove padding */
+          [data-slot="sidebar-inset"] main,
+          [data-slot="sidebar-inset"] > main {
+            display: block !important;
             padding: 0 !important;
+            margin: 0 !important;
           }
+
+          /* 6. space-y wrapper inside main */
+          [data-slot="sidebar-inset"] main > div {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          /* 7. Override inline styles on the newspaper container itself.
+                !important beats inline styles in @media print rules. */
+          #np-print-target {
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+
           @page {
             margin: 1.5cm;
             size: A4;

@@ -1,7 +1,5 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
-import { formatDate } from "@/lib/format";
 import { WIDGET_REGISTRY } from "@/modules/newspaper/lib/widgets/registry";
 import type { EditionBlock } from "@/modules/newspaper/lib/widgets/types";
 
@@ -12,23 +10,15 @@ interface Edition {
   generated_at: string;
 }
 
-const FONT_FAMILY_CLASS: Record<string, string> = {
-  serif: "font-serif",
-  sans: "font-sans",
-  mono: "font-mono",
-};
+// Block types that always occupy full width (no column assignment)
+const FULL_WIDTH_TYPES = new Set(["header", "image"]);
 
-const FONT_SIZE_CLASS: Record<string, string> = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
-};
-
-const LINE_HEIGHT_CLASS: Record<string, string> = {
-  normal: "leading-normal",
-  relaxed: "leading-relaxed",
-  loose: "leading-loose",
-};
+function splitIntoColumns(blocks: EditionBlock[], n: number): EditionBlock[][] {
+  // Assign blocks sequentially: fill column 0 first, then column 1, etc.
+  // This is the newspaper convention (read top-to-bottom per column).
+  const size = Math.ceil(blocks.length / n);
+  return Array.from({ length: n }, (_, i) => blocks.slice(i * size, (i + 1) * size));
+}
 
 export function NewspaperPreview({
   edition,
@@ -37,10 +27,7 @@ export function NewspaperPreview({
   edition: Edition;
   printConfig?: Record<string, string>;
 }) {
-  const fontClass = FONT_FAMILY_CLASS[printConfig.font_family ?? "serif"] ?? "font-serif";
-  const sizeClass = FONT_SIZE_CLASS[printConfig.font_size ?? "md"] ?? "text-base";
-  const leadingClass = LINE_HEIGHT_CLASS[printConfig.line_height ?? "relaxed"] ?? "leading-relaxed";
-  const twoCol = (printConfig.columns ?? "1") === "2";
+  const colCount = Math.min(3, Math.max(1, Number(printConfig.columns ?? "2")));
 
   // Group blocks by page_index
   const pageMap = new Map<number, EditionBlock[]>();
@@ -50,62 +37,163 @@ export function NewspaperPreview({
     pageMap.get(pi)!.push(block);
   }
   const pageIndices = Array.from(pageMap.keys()).sort((a, b) => a - b);
-  // Ensure at least page 0 exists
   if (pageIndices.length === 0) pageIndices.push(0);
 
   return (
-    <div className={`mx-auto max-w-2xl bg-white dark:bg-card print:bg-white print:text-black print:max-w-none ${fontClass} ${sizeClass} ${leadingClass}`}>
-      {pageIndices.map((pageIdx, i) => {
+    <div
+      id="np-print-target"
+      style={{
+        maxWidth: "820px",
+        margin: "0 auto",
+        background: "white",
+        color: "#1a1a1a",
+        fontFamily: "'EB Garamond', Georgia, 'Times New Roman', serif",
+        fontSize: "16px",
+        lineHeight: 1.6,
+        padding: "1.5rem 2rem",
+      }}
+    >
+      {pageIndices.map((pageIdx, pageI) => {
         const pageBlocks = pageMap.get(pageIdx) ?? [];
-        const isFirstPage = i === 0;
+        const isFirstPage = pageI === 0;
+        const hasHeaderBlock = pageBlocks.some((b) => b.type === "header");
+
+        // Separate full-width blocks (header, standalone images) from column blocks
+        const fullWidthBlocks = pageBlocks.filter((b) => FULL_WIDTH_TYPES.has(b.type));
+        const columnBlocks = pageBlocks.filter((b) => !FULL_WIDTH_TYPES.has(b.type));
+        const columns = colCount > 1 ? splitIntoColumns(columnBlocks, colCount) : [columnBlocks];
 
         return (
           <div
             key={pageIdx}
-            className={!isFirstPage ? "print:break-before-page" : undefined}
-            style={!isFirstPage ? { breakBefore: "page" } : undefined}
+            style={!isFirstPage ? { breakBefore: "page" as const, pageBreakBefore: "always" } : undefined}
           >
-            {/* On-screen page separator (not before first page) */}
+            {/* Screen-only page separator */}
             {!isFirstPage && (
-              <div className="flex items-center gap-3 my-8 print:hidden">
-                <div className="flex-1 border-t-2 border-double border-muted-foreground/40" />
-                <span className="text-xs font-medium text-muted-foreground px-2">— Page {pageIdx + 1} —</span>
-                <div className="flex-1 border-t-2 border-double border-muted-foreground/40" />
+              <div
+                className="print:hidden"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  margin: "2.5rem 0",
+                }}
+              >
+                <div style={{ flex: 1, borderTop: "2px dashed #ccc" }} />
+                <span style={{ fontSize: "0.7rem", color: "#aaa", letterSpacing: "0.1em" }}>
+                  PAGE {pageIdx + 1}
+                </span>
+                <div style={{ flex: 1, borderTop: "2px dashed #ccc" }} />
               </div>
             )}
 
-            {/* Masthead — only on page 0 unless there's a header block */}
-            {isFirstPage && !pageBlocks.some((b) => b.type === "header") && (
-              <div className="border-b-4 border-double border-black dark:border-foreground py-6 text-center print:border-black">
-                <h1 className="text-4xl font-bold font-serif">{edition.title}</h1>
-                <p className="mt-1 text-sm text-muted-foreground print:text-gray-600">
-                  {formatDate(edition.generated_at)}
-                </p>
+            {/* Default masthead (when no header block on page 0) */}
+            {isFirstPage && !hasHeaderBlock && (
+              <div style={{ textAlign: "center", padding: "0.5rem 0 1.5rem", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  <div style={{ flex: 1, height: "3px", background: "#1a1a1a" }} />
+                  <div style={{ flex: 1, height: "1px", background: "#1a1a1a", marginTop: "5px" }} />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    opacity: 0.6,
+                    borderTop: "1px solid #1a1a1a",
+                    borderBottom: "1px solid #1a1a1a",
+                    padding: "0.25rem 0",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  <span>
+                    {new Date(edition.generated_at).toLocaleDateString("en-US", { weekday: "long" }).toUpperCase()}
+                  </span>
+                  <span>
+                    {new Date(edition.generated_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+                <h1
+                  style={{
+                    fontSize: "3.5rem",
+                    fontWeight: 900,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1,
+                    margin: "0 0 0.5rem",
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                  }}
+                >
+                  {edition.title.replace(/ - \d{2}\.\d{2}\.\d{4}$/, "")}
+                </h1>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <div style={{ flex: 1, height: "1px", background: "#1a1a1a", marginBottom: "5px" }} />
+                  <div style={{ flex: 1, height: "3px", background: "#1a1a1a" }} />
+                </div>
               </div>
             )}
 
-            <div
-              className="py-4"
-              style={twoCol ? { columnCount: 2, columnGap: "2.5rem" } : undefined}
-            >
-              {pageBlocks.map((block, j) => {
-                const widget = WIDGET_REGISTRY[block.type];
-                if (!widget) return null;
-                const Preview = widget.previewComponent;
-                return (
+            {/* Full-width blocks (header, images) — above the columns */}
+            {fullWidthBlocks.map((block, j) => {
+              const widget = WIDGET_REGISTRY[block.type];
+              if (!widget) return null;
+              const Preview = widget.previewComponent;
+              return (
+                <div key={`fw-${j}`} style={{ marginBottom: "0.5rem" }}>
+                  <Preview block={block} />
+                </div>
+              );
+            })}
+
+            {/* Column blocks — explicit flex layout (reliable in print) */}
+            {columnBlocks.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 0,
+                  alignItems: "flex-start",
+                }}
+              >
+                {columns.map((colBlocks, ci) => (
                   <div
-                    key={j}
-                    className={twoCol ? "pb-6 mb-4 break-inside-avoid" : "py-4 border-b"}
-                    style={twoCol ? { breakInside: "avoid", pageBreakInside: "avoid" } : undefined}
+                    key={ci}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      paddingLeft: ci > 0 ? "1.5rem" : undefined,
+                      paddingRight: ci < colCount - 1 ? "1.5rem" : undefined,
+                      borderLeft: ci > 0 ? "1px solid #d4d0c8" : undefined,
+                    }}
                   >
-                    <Preview block={block} />
+                    {colBlocks.map((block, j) => {
+                      const widget = WIDGET_REGISTRY[block.type];
+                      if (!widget) return null;
+                      const Preview = widget.previewComponent;
+                      return (
+                        <div
+                          key={j}
+                          style={{
+                            padding: "0.85rem 0",
+                            borderBottom:
+                              j < colBlocks.length - 1 ? "1px solid #d4d0c8" : undefined,
+                          }}
+                        >
+                          <Preview block={block} />
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
 
             {pageBlocks.length === 0 && isFirstPage && edition.content.length === 0 && (
-              <p className="py-8 text-center text-muted-foreground">
+              <p style={{ textAlign: "center", padding: "3rem 0", fontSize: "0.85em", opacity: 0.5, fontStyle: "italic" }}>
                 This edition has no content blocks.
               </p>
             )}
@@ -113,10 +201,28 @@ export function NewspaperPreview({
         );
       })}
 
-      <Separator />
-      <p className="py-4 text-center text-xs text-muted-foreground">
-        Generated by Memento
-      </p>
+      {/* Footer */}
+      <div
+        style={{
+          marginTop: "2rem",
+          borderTop: "2px solid #1a1a1a",
+          paddingTop: "0.5rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.4 }}>
+          Generated by Memento
+        </span>
+        <span style={{ fontSize: "0.6rem", letterSpacing: "0.06em", opacity: 0.35 }}>
+          {new Date(edition.generated_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </span>
+      </div>
     </div>
   );
 }

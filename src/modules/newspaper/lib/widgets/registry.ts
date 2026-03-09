@@ -6,6 +6,8 @@ import { TextWidgetDef } from "./text";
 import { WeatherWidgetDef } from "./weather";
 import { CalendarWidgetDef } from "./calendar";
 import { HeaderWidgetDef } from "./header";
+import { QuoteWidgetDef } from "./quote";
+import { ImageWidgetDef } from "./image";
 import type { WidgetDefinition } from "./types";
 
 export const WIDGET_REGISTRY: Record<string, WidgetDefinition> = {
@@ -17,6 +19,8 @@ export const WIDGET_REGISTRY: Record<string, WidgetDefinition> = {
   text: TextWidgetDef,
   weather: WeatherWidgetDef,
   calendar: CalendarWidgetDef,
+  quote: QuoteWidgetDef,
+  image: ImageWidgetDef,
 };
 
 export const WIDGET_LIST = Object.values(WIDGET_REGISTRY);

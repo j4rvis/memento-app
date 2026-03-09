@@ -12,23 +12,85 @@ export function ArticlesPreview({ block }: WidgetPreviewProps) {
 
   return (
     <div>
-      <h3 className="font-semibold mb-2">{block.title}</h3>
+      {/* Section label */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <div style={{ flex: 1, height: "1px", background: "currentColor", opacity: 0.3 }} />
+        <span
+          style={{
+            fontSize: "0.6em",
+            fontWeight: 700,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            opacity: 0.55,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {block.title}
+        </span>
+        <div style={{ flex: 1, height: "1px", background: "currentColor", opacity: 0.3 }} />
+      </div>
+
       {articles.length > 0 ? (
-        <div className="space-y-2">
+        <div>
           {articles.map((article, i) => (
-            <div key={i} className="text-sm">
-              <p className="font-medium">{article.title}</p>
+            <div
+              key={i}
+              style={{
+                paddingBottom: "0.75rem",
+                marginBottom: "0.75rem",
+                borderBottom: i < articles.length - 1 ? "1px solid currentColor" : undefined,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "1em",
+                  fontWeight: 700,
+                  lineHeight: 1.25,
+                  marginBottom: "0.15rem",
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                }}
+              >
+                {article.title}
+              </p>
               {article.site_name && (
-                <p className="text-xs text-muted-foreground">{article.site_name}</p>
+                <p
+                  style={{
+                    fontSize: "0.6em",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    fontStyle: "italic",
+                    opacity: 0.55,
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  {article.site_name}
+                </p>
               )}
               {article.excerpt && (
-                <p className="text-muted-foreground line-clamp-2">{article.excerpt}</p>
+                <p
+                  className={i === 0 ? "np-drop-cap" : undefined}
+                  style={{
+                    fontSize: "0.85em",
+                    lineHeight: 1.55,
+                    textAlign: "justify",
+                    hyphens: "auto",
+                  }}
+                >
+                  {article.excerpt}
+                </p>
               )}
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">No articles</p>
+        <p style={{ fontSize: "0.8em", opacity: 0.5, fontStyle: "italic" }}>No articles</p>
       )}
     </div>
   );

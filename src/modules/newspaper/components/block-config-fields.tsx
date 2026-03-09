@@ -142,6 +142,63 @@ export function BlockConfigFields({ blockType, config = {}, feeds = [], articles
         </div>
       );
 
+    case "quote":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Quote text</Label>
+            <textarea
+              name="config_text"
+              defaultValue={(config.text as string) ?? ""}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm h-20 resize-none"
+              placeholder="Enter an inspiring quote…"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Attribution</Label>
+            <Input
+              name="config_attribution"
+              defaultValue={(config.attribution as string) ?? ""}
+              placeholder="e.g. Marcus Aurelius"
+              className="h-8 text-sm"
+            />
+          </div>
+        </div>
+      );
+
+    case "image":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Image URL</Label>
+            <Input
+              name="config_url"
+              defaultValue={(config.url as string) ?? ""}
+              placeholder="https://images.unsplash.com/photo-…"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Keywords (Unsplash fallback)</Label>
+            <Input
+              name="config_keywords"
+              defaultValue={(config.keywords as string) ?? ""}
+              placeholder="e.g. nature, mountains"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Caption</Label>
+            <Input
+              name="config_caption"
+              defaultValue={(config.caption as string) ?? ""}
+              placeholder="Photo caption…"
+              className="h-8 text-sm"
+            />
+          </div>
+        </div>
+      );
+
     default:
       return null;
   }

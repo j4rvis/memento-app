@@ -160,6 +160,14 @@ export async function fetchBlockData(
       if (config.location) return fetchWeatherData(config.location);
       return null;
     }
+    case "quote": {
+      const config = block.config as { text?: string; attribution?: string };
+      return { text: config.text || "", attribution: config.attribution || "" };
+    }
+    case "image": {
+      const config = block.config as { url?: string; caption?: string; keywords?: string };
+      return { url: config.url || "", caption: config.caption || "", keywords: config.keywords || "" };
+    }
     case "calendar": {
       const config = block.config as { days_ahead?: number };
       const daysAhead = config.days_ahead ?? 7;

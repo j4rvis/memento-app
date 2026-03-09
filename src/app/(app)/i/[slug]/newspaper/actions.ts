@@ -132,6 +132,17 @@ function buildConfig(blockType: string, formData: FormData): Record<string, unkn
       }
       return config;
     }
+    case "quote":
+      return {
+        text: (formData.get("config_text") as string) || "",
+        attribution: (formData.get("config_attribution") as string) || "",
+      };
+    case "image":
+      return {
+        url: (formData.get("config_url") as string) || "",
+        keywords: (formData.get("config_keywords") as string) || "",
+        caption: (formData.get("config_caption") as string) || "",
+      };
     case "calendar":
       return { days_ahead: Number(formData.get("config_days_ahead") || 7) };
     case "header":
