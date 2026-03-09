@@ -1,9 +1,9 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
+import { formatDate } from "@/lib/format";
 import { WIDGET_REGISTRY } from "@/modules/newspaper/lib/widgets/registry";
 import type { EditionBlock } from "@/modules/newspaper/lib/widgets/types";
-import { NewspaperHeader } from "./newspaper-header";
 
 interface Edition {
   id: string;
@@ -44,11 +44,12 @@ export function NewspaperPreview({
 
   return (
     <div className={`mx-auto max-w-2xl bg-white dark:bg-card print:bg-white print:text-black print:max-w-none ${fontClass} ${sizeClass} ${leadingClass}`}>
-      <NewspaperHeader
-        title={edition.title}
-        generatedAt={edition.generated_at}
-        blocks={edition.content}
-      />
+      <div className="border-b-4 border-double border-black dark:border-foreground py-6 text-center print:border-black">
+        <h1 className="text-4xl font-bold font-serif">{edition.title}</h1>
+        <p className="mt-1 text-sm text-muted-foreground print:text-gray-600">
+          {formatDate(edition.generated_at)}
+        </p>
+      </div>
 
       <div
         className="py-4"
