@@ -119,14 +119,58 @@ Simple card grid. Each card: template name, last updated, "Edit" and "Delete" bu
 
 Add "Newspaper" to `AppSidebar` and `BottomNav` (behind a feature flag `newspaper` in instance settings, same pattern as other features).
 
+## Plan
+
+1. **DB migration** — apply `newspaper_templates` table with RLS via Supabase MCP
+2. **Types** — add `newspaper?: boolean` to `InstanceFeatures`
+3. **Settings** — add "Newspaper" to `featureLabels` in settings page
+4. **Navigation** — add `Newspaper` item (Newspaper icon) to `AppSidebar` and `BottomNav`
+5. **Server actions** — `src/app/(app)/i/[slug]/newspaper/actions.ts` (createTemplate, updateTemplate, renameTemplate, deleteTemplate, listTemplates)
+6. **PDF preview API** — `src/app/api/newspaper/[id]/preview/route.ts` calls render engine, returns PDF blob
+7. **Template list page** — `src/app/(app)/i/[slug]/newspaper/page.tsx` — card grid with create/delete
+8. **New template page** — `src/app/(app)/i/[slug]/newspaper/new/page.tsx` — creates template, redirects to editor
+9. **Editor page** — `src/app/(app)/i/[slug]/newspaper/[id]/page.tsx` — loads template, renders `NewspaperEditorClient`
+10. **Preview route** — `src/app/(app)/i/[slug]/newspaper/[id]/preview/page.tsx` — iframe showing PDF from API
+11. **Editor components** in `src/modules/newspaper/components/`:
+    - `NewspaperEditorClient` — full config state, save/preview, layout
+    - `PageCard` — page with layout selector and columns
+    - `ColumnDropzone` — block list with drop target (dnd-kit)
+    - `BlockPalette` — draggable block type buttons
+    - `BlockCard` — block in canvas, up/down reorder, delete, config toggle
+    - `BlockConfigPanel` — inline form below block (per type)
+    - Block config form components (title, markdown, weather, writing-lines, calendar-week, calendar-day, divider, spacer)
+    - `CalendarEntryManager` — Sheet with add/edit/delete entries
+
+**DnD approach**: `@dnd-kit/core` (only available package) for drag-from-palette-to-column; up/down buttons for reorder within column.
+
 ## Acceptance Criteria
 
-- [ ] Template list shows all saved templates
-- [ ] Create / rename / delete templates
-- [ ] Add and reorder pages; switch page layout
-- [ ] Drag blocks from palette into columns; reorder blocks within a column
-- [ ] Each block type has a working config form
-- [ ] Calendar entry manager: add/edit/delete entries
-- [ ] Save persists full config to DB
-- [ ] Preview PDF button opens rendered PDF
-- [ ] Newspaper nav item appears in sidebar and bottom nav
+- [x] Template list shows all saved templates
+- [x] Create / rename / delete templates
+- [x] Add and reorder pages; switch page layout
+- [x] Drag blocks from palette into columns; reorder blocks within a column
+- [x] Each block type has a working config form
+- [x] Calendar entry manager: add/edit/delete entries
+- [x] Save persists full config to DB
+- [x] Preview PDF button opens rendered PDF
+- [x] Newspaper nav item appears in sidebar and bottom nav
+
+## Summary
+
+Implemented the full newspaper visual editor (2026-03-20):
+
+- **DB**: `newspaper_templates` table with RLS (member-scoped SELECT, owner-only INSERT/UPDATE/DELETE)
+- **Types**: Added `newspaper?: boolean` to `InstanceFeatures`; settings page updated to show Newspaper toggle
+- **Navigation**: `Newspaper` item added to `AppSidebar` and `BottomNav` (filtered by `features.newspaper`)
+- **Server actions**: `listTemplates`, `createTemplate`, `updateTemplate`, `renameTemplate`, `deleteTemplate`
+- **API route**: `GET /api/newspaper/[id]/preview` — renders PDF via engine, returns `application/pdf`
+- **Routes**: template list (`/newspaper/`), new-template redirect (`/newspaper/new`), editor (`/newspaper/[id]`), PDF preview iframe (`/newspaper/[id]/preview`)
+- **Components** (`src/modules/newspaper/components/`):
+  - `NewspaperTemplateList` — card grid, inline create form
+  - `NewspaperEditorClient` — DnD context, full `NewspaperConfig` state, save/rename/preview
+  - `BlockPalette` — 8 draggable block-type buttons (`@dnd-kit/core`)
+  - `ColumnDropzone` — droppable column; blocks dropped from palette are appended
+  - `PageCard` — layout selector (single/two-column/three-column), delete page
+  - `BlockCard` — drag handle, expand/collapse config, up/down reorder, delete
+  - `BlockConfigPanel` — inline form per block type (title, markdown, weather, writing-lines, calendar-week, calendar-day, divider, spacer)
+  - `CalendarEntryManager` — Sheet with add/edit/delete calendar entries, color swatches

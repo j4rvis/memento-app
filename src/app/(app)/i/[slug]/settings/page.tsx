@@ -22,11 +22,12 @@ export default async function SettingsPage({
 
   const features = (instance.settings as { features: InstanceFeatures }).features;
 
-  const featureLabels: Record<keyof InstanceFeatures, string> = {
+  const featureLabels: Record<string, string> = {
     todos: "Todos",
     notes: "Notes",
     feeds: "RSS Feeds",
     articles: "Articles",
+    newspaper: "Newspaper",
   };
 
   return (
@@ -86,12 +87,12 @@ export default async function SettingsPage({
             }}
             className="space-y-4"
           >
-            {(Object.keys(featureLabels) as (keyof InstanceFeatures)[]).map((key) => (
+            {Object.keys(featureLabels).map((key) => (
               <label key={key} className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   name={key}
-                  defaultChecked={features[key]}
+                  defaultChecked={features[key as keyof InstanceFeatures] ?? false}
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <span className="text-sm">{featureLabels[key]}</span>

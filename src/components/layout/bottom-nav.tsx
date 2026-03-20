@@ -7,6 +7,7 @@ import {
   StickyNote,
   Rss,
   BookOpen,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { InstanceFeatures } from "@/lib/instance/types";
@@ -16,6 +17,7 @@ const moduleItems = [
   { key: "notes" as const, title: "Notes", path: "notes", icon: StickyNote },
   { key: "feeds" as const, title: "Feeds", path: "feeds", icon: Rss },
   { key: "articles" as const, title: "Bookmarks", path: "articles", icon: BookOpen },
+  { key: "newspaper" as const, title: "Newspaper", path: "newspaper", icon: Newspaper },
 ];
 
 export function BottomNav({
