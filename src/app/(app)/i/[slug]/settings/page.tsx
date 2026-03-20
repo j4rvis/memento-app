@@ -8,10 +8,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { updateInstance, updateFeatures } from "./actions";
 import type { InstanceFeatures } from "@/lib/instance/types";
-import { listGoogleAccounts } from "@/modules/google-calendar/actions";
-import { GoogleAccountsList } from "@/modules/google-calendar/components/GoogleAccountsList";
-import { ConnectGoogleButton } from "@/modules/google-calendar/components/ConnectGoogleButton";
-
 export default async function SettingsPage({
   params,
 }: {
@@ -25,14 +21,12 @@ export default async function SettingsPage({
   }
 
   const features = (instance.settings as { features: InstanceFeatures }).features;
-  const googleAccounts = await listGoogleAccounts(slug);
 
   const featureLabels: Record<keyof InstanceFeatures, string> = {
     todos: "Todos",
     notes: "Notes",
     feeds: "RSS Feeds",
     articles: "Articles",
-    newspaper: "Newspaper",
   };
 
   return (
@@ -107,19 +101,6 @@ export default async function SettingsPage({
               Save Features
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Integrations</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">
-            Connect Google Calendar to pre-populate calendar widgets in your newspaper.
-          </p>
-          <GoogleAccountsList accounts={googleAccounts} slug={slug} />
-          <ConnectGoogleButton slug={slug} />
         </CardContent>
       </Card>
 

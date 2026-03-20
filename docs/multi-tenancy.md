@@ -29,7 +29,6 @@ type InstanceFeatures = {
   notes: boolean;
   feeds: boolean;
   articles: boolean;
-  newspaper: boolean;
 };
 ```
 

@@ -15,7 +15,6 @@ Personal productivity app with multi-tenant workspaces. Built with Next.js, Supa
 | [Notes](docs/feature-notes.md) | Note-taking feature |
 | [Feeds](docs/feature-feeds.md) | RSS/Atom feed reader feature |
 | [Articles](docs/feature-articles.md) | Read-later / article scraping feature |
-| [Newspaper](docs/feature-newspaper.md) | Custom newspaper builder feature |
 
 ## Quick Reference
 

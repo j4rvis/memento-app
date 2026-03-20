@@ -36,14 +36,4 @@ export const queryKeys = {
       ["articles", instanceId, "counts"] as const,
     tags: (instanceId: string) => ["articles", instanceId, "tags"] as const,
   },
-
-  newspapers: {
-    all: (instanceId: string) => ["newspapers", instanceId] as const,
-    list: (instanceId: string) =>
-      ["newspapers", instanceId, "list"] as const,
-    detail: (instanceId: string, newspaperId: string) =>
-      ["newspapers", instanceId, "detail", newspaperId] as const,
-    blocks: (instanceId: string, newspaperId: string) =>
-      ["newspapers", instanceId, "blocks", newspaperId] as const,
-  },
 } as const;

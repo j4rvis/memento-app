@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const STATIC_CACHE = `memento-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `memento-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";

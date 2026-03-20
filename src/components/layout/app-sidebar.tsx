@@ -7,7 +7,6 @@ import {
   StickyNote,
   Rss,
   BookOpen,
-  Newspaper,
   User,
   Settings,
   ChevronsUpDown,
@@ -39,7 +38,6 @@ const moduleItems = [
   { key: "notes" as const, title: "Notes", path: "notes", icon: StickyNote },
   { key: "feeds" as const, title: "Feeds", path: "feeds", icon: Rss },
   { key: "articles" as const, title: "Bookmarks", path: "articles", icon: BookOpen },
-  { key: "newspaper" as const, title: "Newspaper", path: "newspaper", icon: Newspaper },
 ];
 
 interface AppSidebarProps {

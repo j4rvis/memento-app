@@ -20,7 +20,6 @@ src/
 │   │           ├── notes/        # pages + actions.ts (includes [id]/)
 │   │           ├── feeds/        # pages + actions.ts (includes [feedId]/)
 │   │           ├── articles/     # pages + actions.ts (includes [id]/)
-│   │           ├── newspaper/    # pages + actions.ts (includes [id]/ and [id]/preview/)
 │   │           └── settings/     # pages + actions.ts (includes members/)
 │   ├── (auth)/                   # Public auth route group
 │   │   ├── login/                # Login page + actions.ts
@@ -68,9 +67,6 @@ src/
     ├── feeds/
     │   ├── components/           # add-feed-dialog.tsx, feed-entry-card.tsx, feed-list.tsx
     │   └── lib/                  # feed-parser.ts
-    ├── newspaper/
-    │   ├── components/           # add-block-form.tsx, block-editor.tsx, newspaper-preview.tsx
-    │   └── lib/
     ├── notes/
     │   └── components/           # note-card.tsx, note-editor.tsx
     └── todos/
@@ -106,9 +102,6 @@ All feature routes follow: `/i/[slug]/[feature]`
 | `/i/[slug]/feeds/[feedId]` | Feed entries |
 | `/i/[slug]/articles` | Article list |
 | `/i/[slug]/articles/[id]` | Article reader |
-| `/i/[slug]/newspaper` | Newspaper list |
-| `/i/[slug]/newspaper/[id]` | Newspaper editor |
-| `/i/[slug]/newspaper/[id]/preview` | Newspaper preview |
 | `/i/[slug]/settings` | Instance settings |
 | `/i/[slug]/settings/members` | Member management |
 | `/account` | User account (NOT instance-scoped) |

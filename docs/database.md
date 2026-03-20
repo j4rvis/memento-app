@@ -23,16 +23,12 @@ All feature tables have: `id` (uuid PK), `user_id` (FK auth.users), `instance_id
 | `feeds` | `title`, `url`, `site_url`, `description`, `last_fetched_at`, `fetch_error` |
 | `feed_entries` | `feed_id` (FK feeds), `guid`, `title`, `url`, `author`, `content`, `summary`, `image_url`, `published_at`, `is_read`, `is_starred` |
 | `articles` | `url`, `title`, `content`, `excerpt`, `author`, `site_name`, `image_url`, `content_type` (enum), `youtube_video_id`, `is_read`, `is_archived`, `scraped_at`, `scrape_error` |
-| `newspapers` | `title`, `description`, `kindle_email` |
-| `newspaper_blocks` | `newspaper_id` (FK newspapers), `block_type` (enum), `title`, `config` (JSONB), `sort_order` (int) |
-| `newspaper_editions` | `newspaper_id` (FK newspapers), `title`, `content` (JSONB snapshot) |
 
 ## Enums
 
 | Enum | Values |
 |------|--------|
 | `instance_role` | `owner`, `admin`, `member` |
-| `block_type` | `todos`, `notes`, `rss`, `articles`, `text`, `weather` |
 | `content_type` | `article`, `youtube` |
 
 ## Helper Functions (SECURITY DEFINER)
@@ -85,15 +81,14 @@ All tables have RLS enabled. The pattern for data tables:
 4. `create_notes` - notes table + RLS
 5. `create_feeds` - feeds + feed_entries tables + RLS
 6. `create_articles` - articles table + RLS
-7. `create_newspaper` - newspapers + newspaper_blocks + newspaper_editions + RLS
-8. `fix_set_updated_at_search_path` - security fix for search_path
-9. `create_instances_and_memberships` - instances + memberships + helper functions + RLS
-10. `add_instance_id_to_data_tables` - add nullable instance_id to all 8 data tables
-11. `migrate_existing_data_to_instances` - create default instances, backfill, set NOT NULL
-12. `update_rls_policies_for_instances` - replace user-scoped policies with instance-scoped
-13. `update_handle_new_user_for_instances` - trigger creates default instance on signup
-14. `fix_rls_auth_uid_initplan` - wrap auth.uid() in (select ...) for performance
-15. `cleanup_duplicate_rls_policies` - remove duplicate policies from migration naming mismatch
+7. `fix_set_updated_at_search_path` - security fix for search_path
+8. `create_instances_and_memberships` - instances + memberships + helper functions + RLS
+9. `add_instance_id_to_data_tables` - add nullable instance_id to all data tables
+10. `migrate_existing_data_to_instances` - create default instances, backfill, set NOT NULL
+11. `update_rls_policies_for_instances` - replace user-scoped policies with instance-scoped
+12. `update_handle_new_user_for_instances` - trigger creates default instance on signup
+13. `fix_rls_auth_uid_initplan` - wrap auth.uid() in (select ...) for performance
+14. `cleanup_duplicate_rls_policies` - remove duplicate policies from migration naming mismatch
 
 ## Indexes
 
@@ -105,7 +100,6 @@ Key indexes beyond primary keys:
 - `idx_instances_owner_id`
 - `idx_{table}_instance_id` - on all 8 data tables
 - `feed_entries(feed_id, guid)` - unique (for upsert dedup)
-- Various `user_id`, `feed_id`, `newspaper_id` indexes on child tables
 
 ## Settings JSONB Schema
 
@@ -117,8 +111,7 @@ The `instances.settings` column stores:
     "todos": true,
     "notes": true,
     "feeds": true,
-    "articles": true,
-    "newspaper": true
+    "articles": true
   }
 }
 ```
