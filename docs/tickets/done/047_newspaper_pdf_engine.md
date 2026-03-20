@@ -116,14 +116,47 @@ src/modules/newspaper/
         └── base.css
 ```
 
+## Plan
+
+1. Install dependencies: `md-to-pdf`, `@sparticuz/chromium`, `puppeteer-core`, `marked`
+2. Create `src/modules/newspaper/lib/types.ts` — all TypeScript interfaces from the story doc
+3. Create `src/modules/newspaper/engine/styles/base.css` — print CSS
+4. Create block renderers in `src/modules/newspaper/engine/blocks/` (8 files)
+5. Create `src/modules/newspaper/engine/fetchers/weather.ts` — Open-Meteo fetcher
+6. Create `src/modules/newspaper/engine/config-to-html.ts` — walks pages/blocks → full HTML string
+7. Create `src/modules/newspaper/engine/index.ts` — `render(config)` using md-to-pdf with @sparticuz/chromium
+
 ## Acceptance Criteria
 
-- [ ] `render(config)` returns a valid PDF buffer for a config with every block type
-- [ ] Two-column and three-column layouts render correctly on A4
-- [ ] Calendar week block shows entries with correct day/time positioning
-- [ ] Calendar day block shows entries and ruled lines
-- [ ] Weather block renders current + forecast (when data injected)
-- [ ] Writing lines fill available height when `lines` is omitted
-- [ ] Page breaks occur between pages, not inside calendar/weather blocks
-- [ ] Works in Next.js server action and API route context
-- [ ] Puppeteer/Chromium setup documented for serverless deployment
+- [x] `render(config)` returns a valid PDF buffer for a config with every block type
+- [x] Two-column and three-column layouts render correctly on A4
+- [x] Calendar week block shows entries with correct day/time positioning
+- [x] Calendar day block shows entries and ruled lines
+- [x] Weather block renders current + forecast (when data injected)
+- [x] Writing lines fill available height when `lines` is omitted
+- [x] Page breaks occur between pages, not inside calendar/weather blocks
+- [x] Works in Next.js server action and API route context
+- [x] Puppeteer/Chromium setup documented for serverless deployment
+
+## Summary
+
+Implemented the full Newspaper PDF Engine — a pure `render(config: NewspaperConfig): Promise<Buffer>` function with no side effects.
+
+**Files created:**
+- `src/modules/newspaper/lib/types.ts` — all TypeScript interfaces (`NewspaperConfig`, `Page`, all 8 block types, `CalendarEntry`, `WeatherData`)
+- `src/modules/newspaper/engine/index.ts` — `render()` entry point using `md-to-pdf` + `@sparticuz/chromium` with full serverless deployment documentation
+- `src/modules/newspaper/engine/config-to-html.ts` — walks pages/blocks → complete HTML document string
+- `src/modules/newspaper/engine/blocks/title.ts` — masthead with date formatting and border variants
+- `src/modules/newspaper/engine/blocks/markdown.ts` — GFM Markdown via `marked`
+- `src/modules/newspaper/engine/blocks/weather.ts` — current conditions + forecast card (uses pre-injected `WeatherData`)
+- `src/modules/newspaper/engine/blocks/writing-lines.ts` — ruled lines with optional margin line
+- `src/modules/newspaper/engine/blocks/calendar-week.ts` — weekly grid (Mon–Sun columns, hour rows, coloured entry tiles)
+- `src/modules/newspaper/engine/blocks/calendar-day.ts` — daily timeline (30-min slots, ruled lines, coloured entries)
+- `src/modules/newspaper/engine/blocks/divider.ts` — solid/dashed/double/decorative `<hr>` variants
+- `src/modules/newspaper/engine/blocks/spacer.ts` — explicit-height spacer div
+- `src/modules/newspaper/engine/fetchers/weather.ts` — Open-Meteo geocoding + forecast fetch returning `WeatherData`
+- `src/modules/newspaper/engine/styles/base.css` — print-optimised CSS (A4 @page, Georgia serif, column grids, `page-break-inside: avoid` on calendar/weather)
+
+**Dependencies added:** `md-to-pdf`, `@sparticuz/chromium`, `puppeteer-core`, `marked`
+
+**Completed:** 2026-03-20
