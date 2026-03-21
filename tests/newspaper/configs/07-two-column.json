@@ -1,0 +1,29 @@
+{
+  "title": "Two-Column Layout",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "two-column",
+      "column_gap": 8,
+      "columns": [
+        [
+          { "type": "title", "text": "Two-Column Layout", "date_format": "MMMM d, yyyy", "style": "newspaper", "border": "bottom" },
+          { "type": "markdown", "content": "## Left Column\n\nThis column demonstrates how two-column layouts work. Each column is an independent block stack — you can mix any block types freely.\n\n### Feature Rundown\n\nTwo-column mode divides the page into two equal-width sections separated by a configurable gap (default 5 mm).\n\n- Ideal for **morning briefs**: weather + agenda side by side\n- Great for **comparison views**: two weather locations, two days\n- Useful for **reference + notes**: content on one side, writing lines on the other\n\n### Tips\n\nKeep blocks that should stay together in the same column. Blocks within a column never split across columns — they always wrap to the next page if they overflow." },
+          { "type": "divider", "style": "decorative" },
+          { "type": "markdown", "content": "### Quote of the Day\n\n> *The secret of getting ahead is getting started.*\n> — Mark Twain" }
+        ],
+        [
+          { "type": "markdown", "content": "## Right Column\n\nThis side can contain writing lines, a calendar, or more content.\n\n### Today's Priorities\n\n1. \n\n2. \n\n3. " },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Morning thoughts", "lines": 8, "show_margin": true },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Afternoon notes", "lines": 8, "show_margin": true },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Evening reflection", "lines": 6, "show_margin": false }
+        ]
+      ]
+    }
+  ]
+}

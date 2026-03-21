@@ -1,0 +1,112 @@
+{
+  "title": "The Morning Post",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "calendar_entries": [
+    {
+      "title": "Editorial Meeting",
+      "start_at": "2026-03-20T09:00:00",
+      "end_at": "2026-03-20T10:00:00",
+      "all_day": false,
+      "color": "#4285F4"
+    },
+    {
+      "title": "Press Deadline",
+      "start_at": "2026-03-20T14:00:00",
+      "end_at": "2026-03-20T15:00:00",
+      "all_day": false,
+      "color": "#DB4437"
+    },
+    {
+      "title": "Layout Review",
+      "start_at": "2026-03-20T16:30:00",
+      "end_at": "2026-03-20T17:30:00",
+      "all_day": false,
+      "color": "#0F9D58"
+    }
+  ],
+  "pages": [
+    {
+      "layout": "single",
+      "blocks": [
+        {
+          "type": "title",
+          "text": "The Morning Post",
+          "subtitle": "Independent - Impartial - Authoritative",
+          "date_format": "EEEE, MMMM d, yyyy",
+          "style": "newspaper",
+          "border": "both"
+        },
+        {
+          "type": "divider",
+          "style": "solid"
+        },
+        {
+          "type": "weather",
+          "location": "London",
+          "unit": "celsius",
+          "display": "forecast-5"
+        }
+      ]
+    },
+    {
+      "layout": "three-column",
+      "column_gap": 6,
+      "columns": [
+        [
+          {
+            "type": "markdown",
+            "content": "## Lead Story\n\nThe city council announced sweeping reforms to the public transport network late Thursday, citing a 34% rise in commuter delays over the past fiscal year.\n\nThe proposal would see three new express lines added to the grid by 2028, with an integrated ticketing system launching as early as next spring.\n\n\"This is the most significant infrastructure investment in a generation,\" the mayor said.\n\nOpposition leaders have questioned the funding mechanism, arguing costs are underestimated by as much as 40%."
+          },
+          {
+            "type": "divider",
+            "style": "decorative"
+          },
+          {
+            "type": "markdown",
+            "content": "## Markets\n\n| Index   | Close    | Change |\n|---------|----------|--------|\n| FTSE    | 8,142.15 | +0.43% |\n| DAX     | 18,307.2 | -0.12% |\n| S&P 500 | 5,218.19 | +0.67% |\n| Nikkei  | 39,774.0 | +1.21% |"
+          }
+        ],
+        [
+          {
+            "type": "markdown",
+            "content": "## Science & Tech\n\nResearchers have demonstrated a new algorithm capable of reducing energy consumption in LLM inference by up to 60%.\n\nThe technique uses structured pruning combined with dynamic quantisation to trim computation without degrading output quality.\n\n> \"The implications for data-centre operators are enormous - hundreds of megawatts of savings at scale.\"\n> --- Dr. Yuki Tanaka\n\nSeveral cloud providers have already expressed interest in piloting the approach."
+          },
+          {
+            "type": "divider",
+            "style": "dashed"
+          },
+          {
+            "type": "markdown",
+            "content": "### In Brief\n\n- **Sport:** The national side secured a 2-1 victory in last night's qualifier.\n- **Arts:** The Turner Prize shortlist features four artists from across the UK.\n- **Weather:** A slow-moving low-pressure system brings unsettled conditions."
+          }
+        ],
+        [
+          {
+            "type": "calendar-day",
+            "date": "2026-03-20",
+            "hours": [
+              8,
+              19
+            ],
+            "slot_height_mm": 5,
+            "use_global_entries": true
+          },
+          {
+            "type": "spacer",
+            "height_mm": 4
+          },
+          {
+            "type": "writing-lines",
+            "label": "Notes",
+            "lines": 8,
+            "line_spacing_mm": 8,
+            "show_margin": true
+          }
+        ]
+      ]
+    }
+  ],
+  "theme": "elegant"
+}

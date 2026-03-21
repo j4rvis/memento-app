@@ -1,0 +1,34 @@
+{
+  "title": "Divider Styles Showcase",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Divider Styles", "style": "minimal", "border": "bottom" },
+        { "type": "spacer", "height_mm": 4 },
+
+        { "type": "markdown", "content": "### Solid\n\nA clean, unbroken horizontal rule. Default style. Use for separating major sections." },
+        { "type": "divider", "style": "solid", "margin_mm": 3 },
+
+        { "type": "spacer", "height_mm": 4 },
+        { "type": "markdown", "content": "### Dashed\n\nA series of short dashes. Creates a lighter visual break — good for sub-section dividers." },
+        { "type": "divider", "style": "dashed", "margin_mm": 3 },
+
+        { "type": "spacer", "height_mm": 4 },
+        { "type": "markdown", "content": "### Double\n\nTwo parallel lines stacked closely together. Adds a more formal or structured feel." },
+        { "type": "divider", "style": "double", "margin_mm": 3 },
+
+        { "type": "spacer", "height_mm": 4 },
+        { "type": "markdown", "content": "### Decorative\n\nA typographic ornament — uses the `— ✦ —` symbol. Adds a stylish, editorial touch to newspaper-style layouts." },
+        { "type": "divider", "style": "decorative", "margin_mm": 3 },
+
+        { "type": "spacer", "height_mm": 6 },
+        { "type": "markdown", "content": "---\n\n**Usage tip:** All divider styles accept a `margin_mm` property (default 3) to control the vertical space above and below the rule." },
+        { "type": "writing-lines", "label": "Notes", "lines": 8 }
+      ]
+    }
+  ]
+}

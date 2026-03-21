@@ -8,14 +8,19 @@ const MONTH_NAMES = [
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function formatDate(isoDate: string, fmt: string): string {
-  const d = new Date(isoDate);
-  return fmt
-    .replace('EEEE', DAY_NAMES[d.getDay()])
-    .replace('MMMM', MONTH_NAMES[d.getMonth()])
-    .replace('yyyy', String(d.getFullYear()))
-    .replace('yy', String(d.getFullYear()).slice(-2))
-    .replace('d', String(d.getDate()))
-    .replace('MM', String(d.getMonth() + 1).padStart(2, '0'));
+  // Parse as local noon to avoid UTC-vs-local day-of-week mismatch
+  const [y, m, day] = isoDate.split('-').map(Number);
+  const d = new Date(y, m - 1, day, 12, 0, 0);
+  const tokens: Record<string, string> = {
+    'EEEE': DAY_NAMES[d.getDay()],
+    'MMMM': MONTH_NAMES[d.getMonth()],
+    'yyyy': String(d.getFullYear()),
+    'yy': String(d.getFullYear()).slice(-2),
+    'MM': String(d.getMonth() + 1).padStart(2, '0'),
+    'd': String(d.getDate()),
+  };
+  // Replace all tokens in one pass so 'd' doesn't hit letters in day names
+  return fmt.replace(/EEEE|MMMM|yyyy|yy|MM|d/g, (match) => tokens[match] ?? match);
 }
 
 export function renderTitle(block: TitleBlock, date?: string): string {

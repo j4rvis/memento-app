@@ -1,0 +1,34 @@
+{
+  "title": "Morning Brief",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "calendar_entries": [
+    { "title": "Team Standup",        "start_at": "2026-03-20T09:00:00", "end_at": "2026-03-20T09:30:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Architecture Review", "start_at": "2026-03-20T10:00:00", "end_at": "2026-03-20T11:30:00", "all_day": false, "color": "#0F9D58", "calendar": "Work" },
+    { "title": "Lunch with Alex",     "start_at": "2026-03-20T12:00:00", "end_at": "2026-03-20T13:00:00", "all_day": false, "color": "#FF9500", "calendar": "Personal" },
+    { "title": "Client Presentation", "start_at": "2026-03-20T14:00:00", "end_at": "2026-03-20T15:00:00", "all_day": false, "color": "#DB4437", "calendar": "Work" },
+    { "title": "Code Review",         "start_at": "2026-03-20T16:00:00", "end_at": "2026-03-20T17:00:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Gym",                 "start_at": "2026-03-20T18:30:00", "end_at": "2026-03-20T20:00:00", "all_day": false, "color": "#9C27B0", "calendar": "Personal" }
+  ],
+  "pages": [
+    {
+      "layout": "two-column",
+      "column_gap": 6,
+      "columns": [
+        [
+          { "type": "title", "text": "Morning Brief", "date_format": "EEEE, MMMM d yyyy", "style": "newspaper", "border": "both" },
+          { "type": "weather", "location": "New York", "unit": "celsius", "display": "forecast-3" },
+          { "type": "divider", "style": "solid" },
+          { "type": "markdown", "content": "## Top of Mind\n\n- [ ] Review Q1 roadmap with team\n- [ ] Send proposal to client by 3pm\n- [ ] Schedule dentist appointment\n- [ ] Book flights for conference" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "markdown", "content": "## Focus\n\nFinish the architecture review slides and prepare talking points for the client presentation.\n\n## Gratitude\n\n1.\n2.\n3." }
+        ],
+        [
+          { "type": "calendar-day", "date": "2026-03-20", "hours": [7, 21], "use_global_entries": true },
+          { "type": "writing-lines", "label": "Notes", "lines": 10, "show_margin": false }
+        ]
+      ]
+    }
+  ]
+}

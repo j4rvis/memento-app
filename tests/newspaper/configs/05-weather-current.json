@@ -1,0 +1,34 @@
+{
+  "title": "Weather — Current Conditions",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Weather Display: current", "subtitle": "Shows temperature, condition, and wind speed only — no forecast", "style": "minimal", "border": "bottom" },
+        { "type": "spacer", "height_mm": 4 },
+
+        { "type": "markdown", "content": "### New York, USA" },
+        { "type": "weather", "location": "New York", "unit": "fahrenheit", "display": "current" },
+        { "type": "divider", "style": "dashed" },
+
+        { "type": "markdown", "content": "### London, UK" },
+        { "type": "weather", "location": "London", "unit": "celsius", "display": "current" },
+        { "type": "divider", "style": "dashed" },
+
+        { "type": "markdown", "content": "### Tokyo, Japan" },
+        { "type": "weather", "location": "Tokyo", "unit": "celsius", "display": "current" },
+        { "type": "divider", "style": "dashed" },
+
+        { "type": "markdown", "content": "### Sydney, Australia" },
+        { "type": "weather", "location": "Sydney", "unit": "celsius", "display": "current" },
+
+        { "type": "spacer", "height_mm": 6 },
+        { "type": "markdown", "content": "---\n\n**display: `current`** — renders only the live temperature, condition description, and wind speed. No forecast rows." },
+        { "type": "writing-lines", "label": "Notes", "lines": 6 }
+      ]
+    }
+  ]
+}

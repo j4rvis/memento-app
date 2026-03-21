@@ -11,8 +11,8 @@ body {
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 11px;
   line-height: 1.5;
-  color: #000;
-  background: #fff;
+  color: var(--np-text);
+  background: var(--np-bg);
 }
 
 /* Page wrapper */
@@ -48,14 +48,15 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.2;
+  font-family: var(--np-font-heading);
 }
 
 .block-title.style-newspaper h1 {
   font-size: 28px;
   font-weight: bold;
   text-align: center;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: var(--np-masthead-letter-spacing);
+  text-transform: var(--np-masthead-transform);
 }
 
 .block-title.style-minimal h1 {
@@ -80,23 +81,24 @@ body {
 .block-title .date-line {
   text-align: center;
   font-size: 10px;
-  color: #333;
-  margin-top: 1mm;
+  color: var(--np-muted);
+  margin-top: 1.5mm;
+  letter-spacing: 0.03em;
 }
 
 .block-title.border-top {
-  border-top: 2px solid #000;
+  border-top: var(--np-border-width) var(--np-border-style) var(--np-heading);
   padding-top: 2mm;
 }
 
 .block-title.border-bottom {
-  border-bottom: 2px solid #000;
+  border-bottom: var(--np-border-width) var(--np-border-style) var(--np-heading);
   padding-bottom: 2mm;
 }
 
 .block-title.border-both {
-  border-top: 2px solid #000;
-  border-bottom: 2px solid #000;
+  border-top: var(--np-border-width) var(--np-border-style) var(--np-heading);
+  border-bottom: var(--np-border-width) var(--np-border-style) var(--np-heading);
   padding: 2mm 0;
 }
 
@@ -105,12 +107,47 @@ body {
   margin-bottom: 3mm;
 }
 
-.block-markdown h1 { font-size: 18px; margin: 2mm 0 1mm; }
-.block-markdown h2 { font-size: 14px; margin: 2mm 0 1mm; }
-.block-markdown h3 { font-size: 12px; margin: 1mm 0 1mm; }
+.block-markdown h1 { font-size: 18px; margin: 2mm 0 1mm; font-family: var(--np-font-heading); }
+.block-markdown h2 { font-size: 14px; margin: 2mm 0 1mm; font-family: var(--np-font-heading); }
+.block-markdown h3 { font-size: 12px; margin: 1mm 0 1mm; font-family: var(--np-font-heading); }
 .block-markdown p { margin: 0 0 2mm; }
 .block-markdown ul, .block-markdown ol { margin: 0 0 2mm; padding-left: 5mm; }
 .block-markdown li { margin: 0.5mm 0; }
+
+/* Blockquotes */
+.block-markdown blockquote {
+  border-left: 3px solid var(--np-border);
+  margin: 0 0 2mm 2mm;
+  padding: 0.5mm 0 0.5mm 3mm;
+  color: var(--np-muted);
+  font-style: italic;
+}
+
+/* Inline code */
+.block-markdown code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Code blocks */
+.block-markdown pre {
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  padding: 2mm;
+  margin: 0 0 2mm;
+  overflow: hidden;
+}
+
+.block-markdown pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 9px;
+}
 
 /* Task list checkboxes */
 .block-markdown input[type="checkbox"] {
@@ -126,73 +163,18 @@ body {
 }
 
 .block-markdown th {
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--np-text);
   padding: 1mm 2mm;
   text-align: left;
   font-weight: bold;
 }
 
 .block-markdown td {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--np-border);
   padding: 1mm 2mm;
 }
 
-/* Weather block */
-.block-weather {
-  page-break-inside: avoid;
-  border: 1px solid #ccc;
-  padding: 3mm;
-  margin-bottom: 3mm;
-  font-size: 10px;
-}
-
-.block-weather .weather-current {
-  display: flex;
-  align-items: center;
-  gap: 3mm;
-  margin-bottom: 2mm;
-}
-
-.block-weather .weather-temp {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.block-weather .weather-desc {
-  font-size: 11px;
-  color: #444;
-}
-
-.block-weather .weather-wind {
-  font-size: 10px;
-  color: #666;
-}
-
-.block-weather .weather-forecast {
-  display: flex;
-  gap: 2mm;
-}
-
-.block-weather .forecast-day {
-  flex: 1;
-  text-align: center;
-  border-left: 1px solid #eee;
-  padding: 1mm;
-  font-size: 9px;
-}
-
-.block-weather .forecast-day:first-child {
-  border-left: none;
-}
-
-.block-weather .forecast-day .forecast-date {
-  font-weight: bold;
-  margin-bottom: 1mm;
-}
-
-.block-weather .forecast-day .forecast-temps {
-  color: #333;
-}
+/* Weather block — layout handled via inline styles in weather.ts for reliable PDF rendering */
 
 /* Writing lines */
 .block-writing-lines {
@@ -209,7 +191,7 @@ body {
 
 .block-writing-lines .writing-line {
   display: flex;
-  border-bottom: 1px solid #aaa;
+  border-bottom: 1px solid var(--np-border);
   height: 8mm;
 }
 
@@ -236,17 +218,18 @@ body {
 
 .block-calendar-week th,
 .block-calendar-day th {
-  background: #f0f0f0;
-  padding: 1mm 2mm;
+  background: var(--np-accent);
+  color: #fff;
+  padding: 1.5mm 2mm;
   text-align: center;
   font-size: 9px;
   font-weight: bold;
-  border: 1px solid #ccc;
+  border: 1px solid var(--np-heading);
 }
 
 .block-calendar-week td,
 .block-calendar-day td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--np-border);
   padding: 0.5mm 1mm;
   vertical-align: top;
   font-size: 8px;
@@ -256,7 +239,7 @@ body {
 .block-calendar-day .time-col {
   width: 10mm;
   font-size: 8px;
-  color: #666;
+  color: var(--np-muted);
   text-align: right;
   padding-right: 1mm;
   white-space: nowrap;
@@ -275,7 +258,7 @@ body {
 
 .calendar-week-number {
   font-size: 8px;
-  color: #888;
+  color: var(--np-muted);
   text-align: right;
   margin-bottom: 1mm;
 }
@@ -287,22 +270,22 @@ body {
 
 .block-divider hr {
   border: none;
-  border-top: 1px solid #000;
+  border-top: 1px solid var(--np-text);
 }
 
 .block-divider.style-dashed hr {
-  border-top: 1px dashed #666;
+  border-top: 1px dashed var(--np-muted);
 }
 
 .block-divider.style-double hr {
-  border-top: 3px double #000;
+  border-top: 3px double var(--np-text);
 }
 
 .block-divider.style-decorative hr {
   border: none;
   text-align: center;
   font-size: 14px;
-  color: #333;
+  color: var(--np-accent);
 }
 
 .block-divider.style-decorative hr::after {

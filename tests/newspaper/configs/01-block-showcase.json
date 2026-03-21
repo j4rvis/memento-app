@@ -1,0 +1,51 @@
+{
+  "title": "Block Showcase — All Types",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "calendar_entries": [
+    { "title": "Team Standup",        "start_at": "2026-03-20T09:00:00", "end_at": "2026-03-20T09:30:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Architecture Review", "start_at": "2026-03-20T10:00:00", "end_at": "2026-03-20T11:30:00", "all_day": false, "color": "#0F9D58", "calendar": "Work" },
+    { "title": "Lunch with Alex",     "start_at": "2026-03-20T12:00:00", "end_at": "2026-03-20T13:00:00", "all_day": false, "color": "#FF9500", "calendar": "Personal" },
+    { "title": "Client Presentation", "start_at": "2026-03-20T14:00:00", "end_at": "2026-03-20T15:00:00", "all_day": false, "color": "#DB4437", "calendar": "Work" },
+    { "title": "Code Review",         "start_at": "2026-03-20T16:00:00", "end_at": "2026-03-20T17:00:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Gym",                 "start_at": "2026-03-20T18:30:00", "end_at": "2026-03-20T20:00:00", "all_day": false, "color": "#9C27B0", "calendar": "Personal" }
+  ],
+  "pages": [
+    {
+      "layout": "two-column",
+      "columns": [
+        [
+          { "type": "title", "text": "Block Showcase", "subtitle": "Every block type in one PDF", "date_format": "EEEE, MMMM d yyyy", "style": "newspaper", "border": "both" },
+          { "type": "divider", "style": "solid" },
+          { "type": "markdown", "content": "## Markdown Block\n\nThis is a **markdown** block. It supports:\n\n- *Italic* and **bold** text\n- `inline code` and links\n- Tables and task lists\n\n| Column A | Column B |\n|----------|----------|\n| Value 1  | Value 2  |\n| Value 3  | Value 4  |\n\n> Blockquotes also work fine." },
+          { "type": "divider", "style": "decorative" },
+          { "type": "weather", "location": "New York", "unit": "celsius", "display": "forecast-3" }
+        ],
+        [
+          { "type": "calendar-day", "date": "2026-03-20", "hours": [8, 20], "use_global_entries": true },
+          { "type": "spacer", "height_mm": 5 },
+          { "type": "writing-lines", "label": "Notes", "lines": 8, "show_margin": true }
+        ]
+      ]
+    },
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Weekly View", "subtitle": "calendar-week block — week of March 16", "style": "minimal" },
+        { "type": "divider", "style": "dashed" },
+        {
+          "type": "calendar-week",
+          "start_date": "2026-03-16",
+          "week_start": "monday",
+          "hours": [8, 20],
+          "show_week_number": true,
+          "use_global_entries": true
+        },
+        { "type": "spacer", "height_mm": 6 },
+        { "type": "divider", "style": "double" },
+        { "type": "writing-lines", "label": "Week in Review", "lines": 6, "line_spacing_mm": 8 }
+      ]
+    }
+  ]
+}

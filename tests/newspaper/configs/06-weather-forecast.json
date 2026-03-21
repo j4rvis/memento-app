@@ -1,0 +1,42 @@
+{
+  "title": "Weather — Forecast Displays",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "two-column",
+      "column_gap": 8,
+      "columns": [
+        [
+          { "type": "title", "text": "3-Day Forecast", "subtitle": "display: forecast-3", "style": "minimal", "border": "bottom" },
+          { "type": "spacer", "height_mm": 3 },
+          { "type": "markdown", "content": "### New York" },
+          { "type": "weather", "location": "New York", "unit": "fahrenheit", "display": "forecast-3" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "markdown", "content": "### London" },
+          { "type": "weather", "location": "London", "unit": "celsius", "display": "forecast-3" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "markdown", "content": "### Tokyo" },
+          { "type": "weather", "location": "Tokyo", "unit": "celsius", "display": "forecast-3" },
+          { "type": "spacer", "height_mm": 4 },
+          { "type": "markdown", "content": "**forecast-3** shows current conditions plus the next 3 days." }
+        ],
+        [
+          { "type": "title", "text": "5-Day Forecast", "subtitle": "display: forecast-5", "style": "minimal", "border": "bottom" },
+          { "type": "spacer", "height_mm": 3 },
+          { "type": "markdown", "content": "### New York" },
+          { "type": "weather", "location": "New York", "unit": "fahrenheit", "display": "forecast-5" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "markdown", "content": "### London" },
+          { "type": "weather", "location": "London", "unit": "celsius", "display": "forecast-5" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "markdown", "content": "### Tokyo" },
+          { "type": "weather", "location": "Tokyo", "unit": "celsius", "display": "forecast-5" },
+          { "type": "spacer", "height_mm": 4 },
+          { "type": "markdown", "content": "**forecast-5** shows current conditions plus the next 5 days." }
+        ]
+      ]
+    }
+  ]
+}

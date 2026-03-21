@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { NewspaperConfig, Block, CalendarEntry } from '../lib/types';
+import { THEMES, type ThemeName } from './themes';
 import { renderTitle } from './blocks/title';
 import { renderMarkdown } from './blocks/markdown';
 import { renderWeather } from './blocks/weather';
@@ -34,10 +35,30 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
   const date = config.date ?? new Date().toISOString().slice(0, 10);
   const globalEntries = config.calendar_entries ?? [];
   const margins = config.margins ?? { top: 15, right: 15, bottom: 15, left: 15 };
-  const fontFamily = config.font_family ?? 'Georgia, serif';
   const fontSize = config.base_font_size ?? 11;
   const paperSize = config.paper_size ?? 'A4';
   const orientation = config.orientation ?? 'portrait';
+
+  // Resolve theme
+  const themeName = (config.theme ?? 'classic') as ThemeName;
+  const theme = THEMES[themeName] ?? THEMES['classic'];
+
+  // CSS variables block injected into <style>
+  const cssVarBlock = `:root {\n` +
+    Object.entries(theme.cssVars).map(([k, v]) => `  ${k}: ${v};`).join('\n') +
+    `\n}`;
+
+  // Google Fonts link tags (empty string when not needed)
+  const fontsLink = theme.googleFontsUrl
+    ? `<link rel="preconnect" href="https://fonts.googleapis.com">\n  ` +
+      `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  ` +
+      `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?${theme.googleFontsUrl}">`
+    : '';
+
+  // Body font: theme wins; legacy font_family only used when no theme is set
+  const fontFamily = config.theme
+    ? theme.cssVars['--np-font-body']
+    : (config.font_family ?? theme.cssVars['--np-font-body']);
 
   let baseCss = '';
   try {
@@ -84,8 +105,10 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(config.title)}</title>
+  ${fontsLink}
   <style>
 ${baseCss}
+${cssVarBlock}
 ${pageBreakCss}
   </style>
 </head>

@@ -1,0 +1,31 @@
+{
+  "title": "Three-Column Layout",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "three-column",
+      "column_gap": 5,
+      "columns": [
+        [
+          { "type": "title", "text": "Three Columns", "style": "bold", "border": "bottom" },
+          { "type": "markdown", "content": "## Column One\n\nThree-column mode divides the page into three equal sections. Each column is narrow, so concise content works best.\n\n**Good uses:**\n- Short reading lists\n- Brief notes sections\n- Side-by-side comparisons\n\n**Writing space:**" },
+          { "type": "writing-lines", "label": "", "lines": 14, "show_margin": false }
+        ],
+        [
+          { "type": "title", "text": ".", "style": "minimal", "border": "bottom" },
+          { "type": "markdown", "content": "## Column Two\n\nKeep content compact. Long paragraphs will feel cramped in narrow columns — use short sentences and bullet points.\n\n**Habit Tracker**\n\n| Habit | M | T | W | T | F |\n|-------|---|---|---|---|---|\n| Exercise | ☐ | ☐ | ☐ | ☐ | ☐ |\n| Read | ☐ | ☐ | ☐ | ☐ | ☐ |\n| Meditate | ☐ | ☐ | ☐ | ☐ | ☐ |\n| Journal | ☐ | ☐ | ☐ | ☐ | ☐ |\n| Sleep 8h | ☐ | ☐ | ☐ | ☐ | ☐ |" },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Ideas", "lines": 8, "show_margin": false }
+        ],
+        [
+          { "type": "title", "text": ".", "style": "minimal", "border": "bottom" },
+          { "type": "markdown", "content": "## Column Three\n\nThe third column can hold a different type of content — for example, weather or a to-do list.\n\n**Quick To-Do**\n\n- [ ] \n- [ ] \n- [ ] \n- [ ] \n- [ ] \n- [ ] \n\n**Done Today**\n\n- [x] " },
+          { "type": "divider", "style": "dashed" },
+          { "type": "weather", "location": "New York", "unit": "celsius", "display": "current" }
+        ]
+      ]
+    }
+  ]
+}

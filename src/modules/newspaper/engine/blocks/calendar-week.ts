@@ -10,7 +10,11 @@ function addDays(date: Date, days: number): Date {
 }
 
 function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Use local getters so dates match the local-time strings in calendar entries
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function entryColor(color?: string): string {

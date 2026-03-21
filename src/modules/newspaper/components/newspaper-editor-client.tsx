@@ -258,6 +258,22 @@ export function NewspaperEditorClient({
             className="h-7 w-56 text-sm font-semibold border-transparent bg-transparent px-1 focus-visible:border-border focus-visible:bg-background"
           />
           <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">Theme</span>
+              <select
+                className="h-7 rounded-md border bg-background px-2 text-xs"
+                value={config.theme ?? 'classic'}
+                onChange={(e) =>
+                  setConfig((prev) => ({ ...prev, theme: e.target.value as NewspaperConfig['theme'] }))
+                }
+              >
+                <option value="classic">Classic</option>
+                <option value="broadsheet">Broadsheet</option>
+                <option value="vintage">Vintage</option>
+                <option value="elegant">Elegant</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
             <CalendarEntryManager
               entries={config.calendar_entries ?? []}
               onChange={setCalendarEntries}

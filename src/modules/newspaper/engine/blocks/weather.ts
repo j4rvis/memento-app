@@ -38,32 +38,41 @@ export function renderWeather(block: WeatherBlock): string {
   const display = block.display ?? 'forecast-3';
   const forecastDays = display === 'current' ? 0 : display === 'forecast-3' ? 3 : 5;
 
-  let html = `<div class="block-weather">`;
-  html += `<div style="font-size:10px;font-weight:bold;margin-bottom:1mm;">${esc(data.location)}</div>`;
+  const CARD = 'border:1px solid var(--np-border);border-top:3px solid var(--np-card-top-border);padding:3mm;margin-bottom:3mm;font-size:10px;background:var(--np-card-bg);page-break-inside:avoid;';
 
-  // Current conditions
-  html += `<div class="weather-current">`;
-  html += `<span class="weather-temp">${Math.round(data.current.temperature)}${unit}</span>`;
-  html += `<span>`;
-  html += `<div class="weather-desc">${esc(wmoLabel(data.current.weathercode))}</div>`;
-  html += `<div class="weather-wind">Wind: ${Math.round(data.current.windspeed)} km/h</div>`;
-  html += `</span>`;
-  html += `</div>`;
+  let html = `<div style="${CARD}">`;
 
-  // Forecast
-  if (forecastDays > 0 && data.forecast.length > 0) {
+  // Location header
+  html += `<div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;color:var(--np-accent);margin-bottom:2mm;">${esc(data.location)}</div>`;
+
+  // Current conditions — table layout so it always renders side-by-side
+  const hasForecast = forecastDays > 0 && data.forecast.length > 0;
+  const currentBorder = hasForecast ? 'border-bottom:1px solid var(--np-border);' : '';
+  html += `<table style="width:100%;border:none;border-collapse:collapse;margin-bottom:${hasForecast ? '2mm' : '0'};padding-bottom:${hasForecast ? '2mm' : '0'};${currentBorder}"><tr>`;
+  html += `<td style="font-size:26px;font-weight:bold;line-height:1;padding-right:3mm;vertical-align:middle;white-space:nowrap;color:var(--np-text);">${Math.round(data.current.temperature)}${unit}</td>`;
+  html += `<td style="vertical-align:middle;">`;
+  html += `<div style="font-size:11px;font-weight:500;color:var(--np-accent);">${esc(wmoLabel(data.current.weathercode))}</div>`;
+  html += `<div style="font-size:9px;color:var(--np-muted);margin-top:1mm;">Wind: ${Math.round(data.current.windspeed)} km/h</div>`;
+  html += `</td></tr></table>`;
+
+  // Forecast — table layout for reliable column rendering
+  if (hasForecast) {
     const days = data.forecast.slice(0, forecastDays);
-    html += `<div class="weather-forecast">`;
-    for (const day of days) {
-      const d = new Date(day.date);
-      const dayName = SHORT_DAY[d.getDay()];
-      html += `<div class="forecast-day">`;
-      html += `<div class="forecast-date">${dayName}</div>`;
-      html += `<div>${esc(wmoLabel(day.weathercode))}</div>`;
-      html += `<div class="forecast-temps">${Math.round(day.temp_max)}/${Math.round(day.temp_min)}${unit}</div>`;
-      html += `</div>`;
+    html += `<table style="width:100%;border:none;border-collapse:collapse;"><tr>`;
+    for (let i = 0; i < days.length; i++) {
+      const day = days[i];
+      // Parse date as local noon to get correct day-of-week
+      const [y, m, d] = day.date.split('-').map(Number);
+      const dt = new Date(y, m - 1, d, 12, 0, 0);
+      const dayName = SHORT_DAY[dt.getDay()];
+      const borderLeft = i > 0 ? 'border-left:1px solid var(--np-border);' : '';
+      html += `<td style="text-align:center;vertical-align:top;${borderLeft}padding:1.5mm 1mm;font-size:9px;">`;
+      html += `<div style="font-weight:bold;color:var(--np-accent);margin-bottom:1mm;">${dayName}</div>`;
+      html += `<div style="color:var(--np-muted);font-size:8px;margin-bottom:0.5mm;">${esc(wmoLabel(day.weathercode))}</div>`;
+      html += `<div style="font-weight:500;color:var(--np-text);">${Math.round(day.temp_max)}/${Math.round(day.temp_min)}${unit}</div>`;
+      html += `</td>`;
     }
-    html += `</div>`;
+    html += `</tr></table>`;
   }
 
   html += `</div>`;

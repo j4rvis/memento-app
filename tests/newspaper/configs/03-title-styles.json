@@ -1,0 +1,53 @@
+{
+  "title": "Title Styles Showcase",
+  "date": "2026-03-20",
+  "paper_size": "A4",
+  "orientation": "portrait",
+  "pages": [
+    {
+      "layout": "single",
+      "blocks": [
+        {
+          "type": "title",
+          "text": "The Daily Chronicle",
+          "subtitle": "Style: newspaper — classic masthead with serifs",
+          "date_format": "EEEE, MMMM d yyyy",
+          "style": "newspaper",
+          "border": "both"
+        },
+        { "type": "markdown", "content": "The **newspaper** style renders the title as a classic broadsheet masthead — centered, large serif font, with optional top and bottom borders. Best for daily digests and print-style layouts.\n\n---\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." },
+        { "type": "writing-lines", "label": "Notes", "lines": 12 }
+      ]
+    },
+    {
+      "layout": "single",
+      "blocks": [
+        {
+          "type": "title",
+          "text": "Morning Pages",
+          "subtitle": "Style: minimal — clean, left-aligned",
+          "date_format": "EEEE, MMMM d yyyy",
+          "style": "minimal",
+          "border": "bottom"
+        },
+        { "type": "markdown", "content": "The **minimal** style is left-aligned with a clean, understated appearance. No heavy borders or decorations — just the title and date in a lightweight format. Great for journal-style pages and focused work sessions.\n\n---\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." },
+        { "type": "writing-lines", "label": "Notes", "lines": 12 }
+      ]
+    },
+    {
+      "layout": "single",
+      "blocks": [
+        {
+          "type": "title",
+          "text": "WEEKLY BRIEF",
+          "subtitle": "Style: bold — uppercase, heavy weight",
+          "date_format": "EEEE, MMMM d yyyy",
+          "style": "bold",
+          "border": "top"
+        },
+        { "type": "markdown", "content": "The **bold** style renders the title in uppercase with heavy font weight for maximum impact. Ideal for weekly summaries, announcements, or any content that needs strong visual hierarchy at the top of the page.\n\n---\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." },
+        { "type": "writing-lines", "label": "Notes", "lines": 12 }
+      ]
+    }
+  ]
+}

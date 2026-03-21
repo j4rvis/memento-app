@@ -25,12 +25,19 @@
 
 import type { NewspaperConfig } from '../lib/types';
 import { configToHtml } from './config-to-html';
+import { THEMES, buildThemeCss, type ThemeName } from './themes';
 
 export { fetchWeather } from './fetchers/weather';
 export type { WeatherData } from '../lib/types';
 
 export async function render(config: NewspaperConfig): Promise<Buffer> {
   const html = await configToHtml(config);
+
+  // Resolve theme CSS — injected via page.addStyleTag() into the real <head>,
+  // bypassing md-to-pdf's template wrapping that would put it inside <body>.
+  const themeName = (config.theme ?? 'classic') as ThemeName;
+  const theme = THEMES[themeName] ?? THEMES['classic'];
+  const themeCss = buildThemeCss(theme);
 
   // Lazily import to avoid issues in environments where these are not installed
   const { default: mdToPdf } = await import('md-to-pdf');
@@ -43,6 +50,7 @@ export async function render(config: NewspaperConfig): Promise<Buffer> {
   const pdf = await mdToPdf(
     { content: html },
     {
+      css: themeCss,
       launch_options: {
         executablePath,
         args: chromium.default.args,

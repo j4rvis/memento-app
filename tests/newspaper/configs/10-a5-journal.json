@@ -1,0 +1,48 @@
+{
+  "title": "A5 Writing Journal",
+  "date": "2026-03-20",
+  "paper_size": "A5",
+  "orientation": "portrait",
+  "font_family": "Georgia, serif",
+  "base_font_size": 10,
+  "margins": { "top": 10, "right": 12, "bottom": 10, "left": 15 },
+  "pages": [
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Daily Journal", "date_format": "EEEE, MMMM d yyyy", "style": "minimal", "border": "bottom" },
+        { "type": "markdown", "content": "**Morning Intention**" },
+        { "type": "writing-lines", "label": "", "lines": 4, "show_margin": false, "line_spacing_mm": 9 },
+        { "type": "divider", "style": "dashed" },
+        { "type": "markdown", "content": "**Gratitude (3 things)**\n\n1.\n2.\n3." },
+        { "type": "divider", "style": "dashed" },
+        { "type": "markdown", "content": "**Free Writing**" },
+        { "type": "writing-lines", "label": "", "lines": 12, "show_margin": true, "line_spacing_mm": 9 }
+      ]
+    },
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Daily Journal", "date_format": "EEEE, MMMM d yyyy", "style": "minimal", "border": "bottom" },
+        { "type": "markdown", "content": "**Continued**" },
+        { "type": "writing-lines", "label": "", "lines": 20, "show_margin": true, "line_spacing_mm": 9 }
+      ]
+    },
+    {
+      "layout": "single",
+      "blocks": [
+        { "type": "title", "text": "Evening Review", "date_format": "EEEE, MMMM d yyyy", "style": "minimal", "border": "bottom" },
+        { "type": "markdown", "content": "**Wins today**" },
+        { "type": "writing-lines", "label": "", "lines": 5, "show_margin": false, "line_spacing_mm": 9 },
+        { "type": "divider", "style": "dashed" },
+        { "type": "markdown", "content": "**What I learned**" },
+        { "type": "writing-lines", "label": "", "lines": 5, "show_margin": false, "line_spacing_mm": 9 },
+        { "type": "divider", "style": "dashed" },
+        { "type": "markdown", "content": "**Tomorrow's focus**" },
+        { "type": "writing-lines", "label": "", "lines": 4, "show_margin": false, "line_spacing_mm": 9 },
+        { "type": "divider", "style": "decorative" },
+        { "type": "markdown", "content": "*End of day.*" }
+      ]
+    }
+  ]
+}

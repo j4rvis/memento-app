@@ -121,6 +121,7 @@ export interface NewspaperConfig {
   date?: string;
   paper_size?: 'A4' | 'Letter' | 'A5';
   orientation?: 'portrait' | 'landscape';
+  theme?: 'classic' | 'broadsheet' | 'vintage' | 'elegant' | 'bold';
   font_family?: string;
   base_font_size?: number;
   margins?: Margins;

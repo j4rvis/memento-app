@@ -1,0 +1,50 @@
+{
+  "title": "Landscape Letter — Weekly Planner",
+  "date": "2026-03-20",
+  "paper_size": "Letter",
+  "orientation": "landscape",
+  "margins": { "top": 10, "right": 12, "bottom": 10, "left": 12 },
+  "calendar_entries": [
+    { "title": "Sprint Planning",     "start_at": "2026-03-16T09:00:00", "end_at": "2026-03-16T11:00:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "1:1 with Manager",    "start_at": "2026-03-16T14:00:00", "end_at": "2026-03-16T14:30:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Team Lunch",          "start_at": "2026-03-17T12:30:00", "end_at": "2026-03-17T13:30:00", "all_day": false, "color": "#FF9500", "calendar": "Personal" },
+    { "title": "Product Demo",        "start_at": "2026-03-17T15:00:00", "end_at": "2026-03-17T16:00:00", "all_day": false, "color": "#0F9D58", "calendar": "Work" },
+    { "title": "All-Hands Meeting",   "start_at": "2026-03-18T10:00:00", "end_at": "2026-03-18T11:30:00", "all_day": false, "color": "#DB4437", "calendar": "Work" },
+    { "title": "Design Review",       "start_at": "2026-03-19T13:00:00", "end_at": "2026-03-19T14:00:00", "all_day": false, "color": "#0F9D58", "calendar": "Work" },
+    { "title": "Team Standup",        "start_at": "2026-03-20T09:00:00", "end_at": "2026-03-20T09:30:00", "all_day": false, "color": "#4285F4", "calendar": "Work" },
+    { "title": "Architecture Review", "start_at": "2026-03-20T10:00:00", "end_at": "2026-03-20T11:30:00", "all_day": false, "color": "#0F9D58", "calendar": "Work" },
+    { "title": "Client Presentation", "start_at": "2026-03-20T14:00:00", "end_at": "2026-03-20T15:00:00", "all_day": false, "color": "#DB4437", "calendar": "Work" },
+    { "title": "Gym",                 "start_at": "2026-03-20T18:30:00", "end_at": "2026-03-20T20:00:00", "all_day": false, "color": "#9C27B0", "calendar": "Personal" },
+    { "title": "Farmers Market",      "start_at": "2026-03-21T09:00:00", "end_at": "2026-03-21T11:00:00", "all_day": false, "color": "#FF9500", "calendar": "Personal" },
+    { "title": "Hackathon",           "start_at": "2026-03-22", "end_at": "2026-03-22", "all_day": true, "color": "#9C27B0", "calendar": "Work" }
+  ],
+  "pages": [
+    {
+      "layout": "two-column",
+      "column_gap": 8,
+      "columns": [
+        [
+          { "type": "title", "text": "Week of March 16", "subtitle": "Landscape · Letter · Two-column", "date_format": "MMMM d, yyyy", "style": "newspaper", "border": "both" },
+          {
+            "type": "calendar-week",
+            "start_date": "2026-03-16",
+            "week_start": "monday",
+            "hours": [8, 19],
+            "show_week_number": true,
+            "slot_height_mm": 4,
+            "use_global_entries": true
+          }
+        ],
+        [
+          { "type": "weather", "location": "New York", "unit": "fahrenheit", "display": "forecast-5" },
+          { "type": "divider", "style": "solid" },
+          { "type": "markdown", "content": "## Week Goals\n\n- [ ] \n- [ ] \n- [ ] " },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Notes", "lines": 12, "show_margin": false },
+          { "type": "divider", "style": "dashed" },
+          { "type": "writing-lines", "label": "Next week prep", "lines": 6, "show_margin": false }
+        ]
+      ]
+    }
+  ]
+}
