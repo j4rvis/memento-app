@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
+import { randomBytes, createHash } from "crypto";
 
 export async function updateInstance(slug: string, formData: FormData) {
   const supabase = await createClient();
@@ -74,4 +75,43 @@ export async function updateMemberRole(
 
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/settings/members`);
+}
+
+export async function createApiKey(
+  slug: string,
+  { name, scopes }: { name: string; scopes: string[] }
+): Promise<{ rawKey: string }> {
+  const instanceId = await getInstanceIdFromSlug(slug);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const rawKey = "mnp_" + randomBytes(32).toString("hex");
+  const keyHash = createHash("sha256").update(rawKey).digest("hex");
+
+  const serviceClient = createServiceRoleClient();
+  const { error } = await serviceClient.from("newspaper_api_keys").insert({
+    instance_id: instanceId,
+    user_id: user.id,
+    name,
+    key_hash: keyHash,
+    scopes,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/settings`);
+  return { rawKey };
+}
+
+export async function revokeApiKey(slug: string, keyId: string) {
+  await getInstanceIdFromSlug(slug); // validates access
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("newspaper_api_keys")
+    .delete()
+    .eq("id", keyId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/i/${slug}/settings`);
 }

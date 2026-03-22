@@ -1,0 +1,10 @@
+{
+  "id": "scryfall-obsidian-plugin",
+  "name": "Scryfall",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Search and insert Magic: The Gathering card notes via Scryfall",
+  "author": "micha",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,300 @@
+// Inlined at build time so Turbopack/Next.js __dirname rewriting cannot break readFileSync.
+export const BASE_CSS = `@page {
+  size: A4;
+  margin: 15mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--np-text);
+  background: var(--np-bg);
+}
+
+/* Page wrapper */
+.page {
+  page-break-after: always;
+}
+
+.page:last-child {
+  page-break-after: avoid;
+}
+
+/* Column layouts */
+.columns-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  align-items: start;
+}
+
+.columns-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4mm;
+  align-items: start;
+}
+
+/* Title block */
+.block-title {
+  margin-bottom: 4mm;
+}
+
+.block-title h1 {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  font-family: var(--np-font-heading);
+}
+
+.block-title.style-newspaper h1 {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: var(--np-masthead-letter-spacing);
+  text-transform: var(--np-masthead-transform);
+}
+
+.block-title.style-minimal h1 {
+  font-size: 20px;
+  font-weight: normal;
+  text-align: left;
+}
+
+.block-title.style-bold h1 {
+  font-size: 24px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.block-title .subtitle {
+  text-align: center;
+  font-size: 12px;
+  font-style: italic;
+  margin: 1mm 0;
+}
+
+.block-title .date-line {
+  text-align: center;
+  font-size: 10px;
+  color: var(--np-muted);
+  margin-top: 1.5mm;
+  letter-spacing: 0.03em;
+}
+
+.block-title.border-top {
+  border-top: var(--np-border-width) var(--np-border-style) var(--np-heading);
+  padding-top: 2mm;
+}
+
+.block-title.border-bottom {
+  border-bottom: var(--np-border-width) var(--np-border-style) var(--np-heading);
+  padding-bottom: 2mm;
+}
+
+.block-title.border-both {
+  border-top: var(--np-border-width) var(--np-border-style) var(--np-heading);
+  border-bottom: var(--np-border-width) var(--np-border-style) var(--np-heading);
+  padding: 2mm 0;
+}
+
+/* Markdown block */
+.block-markdown {
+  margin-bottom: 3mm;
+}
+
+.block-markdown h1 { font-size: 18px; margin: 2mm 0 1mm; font-family: var(--np-font-heading); }
+.block-markdown h2 { font-size: 14px; margin: 2mm 0 1mm; font-family: var(--np-font-heading); }
+.block-markdown h3 { font-size: 12px; margin: 1mm 0 1mm; font-family: var(--np-font-heading); }
+.block-markdown p { margin: 0 0 2mm; }
+.block-markdown ul, .block-markdown ol { margin: 0 0 2mm; padding-left: 5mm; }
+.block-markdown li { margin: 0.5mm 0; }
+
+/* Blockquotes */
+.block-markdown blockquote {
+  border-left: 3px solid var(--np-border);
+  margin: 0 0 2mm 2mm;
+  padding: 0.5mm 0 0.5mm 3mm;
+  color: var(--np-muted);
+  font-style: italic;
+}
+
+/* Inline code */
+.block-markdown code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Code blocks */
+.block-markdown pre {
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  padding: 2mm;
+  margin: 0 0 2mm;
+  overflow: hidden;
+}
+
+.block-markdown pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 9px;
+}
+
+/* Task list checkboxes */
+.block-markdown input[type="checkbox"] {
+  margin-right: 1mm;
+}
+
+/* Tables */
+.block-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin-bottom: 2mm;
+}
+
+.block-markdown th {
+  border-bottom: 1px solid var(--np-text);
+  padding: 1mm 2mm;
+  text-align: left;
+  font-weight: bold;
+}
+
+.block-markdown td {
+  border-bottom: 1px solid var(--np-border);
+  padding: 1mm 2mm;
+}
+
+/* Weather block — layout handled via inline styles in weather.ts for reliable PDF rendering */
+
+/* Writing lines */
+.block-writing-lines {
+  margin-bottom: 3mm;
+}
+
+.block-writing-lines .writing-label {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 1mm;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.block-writing-lines .writing-line {
+  display: flex;
+  border-bottom: 1px solid var(--np-border);
+  height: 8mm;
+}
+
+.block-writing-lines .writing-margin {
+  width: 8mm;
+  border-right: 1px solid #e88;
+  flex-shrink: 0;
+}
+
+/* Calendar blocks */
+.block-calendar-week,
+.block-calendar-day {
+  page-break-inside: avoid;
+  margin-bottom: 3mm;
+  font-size: 9px;
+}
+
+.block-calendar-week table,
+.block-calendar-day table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.block-calendar-week th,
+.block-calendar-day th {
+  background: var(--np-accent);
+  color: #fff;
+  padding: 1.5mm 2mm;
+  text-align: center;
+  font-size: 9px;
+  font-weight: bold;
+  border: 1px solid var(--np-heading);
+}
+
+.block-calendar-week td,
+.block-calendar-day td {
+  border: 1px solid var(--np-border);
+  padding: 0.5mm 1mm;
+  vertical-align: top;
+  font-size: 8px;
+}
+
+.block-calendar-week .time-col,
+.block-calendar-day .time-col {
+  width: 10mm;
+  font-size: 8px;
+  color: var(--np-muted);
+  text-align: right;
+  padding-right: 1mm;
+  white-space: nowrap;
+}
+
+.calendar-entry {
+  border-left: 3px solid #4285f4;
+  background: rgba(66, 133, 244, 0.1);
+  padding: 0.5mm 1mm;
+  margin: 0.5mm 0;
+  font-size: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.calendar-week-number {
+  font-size: 8px;
+  color: var(--np-muted);
+  text-align: right;
+  margin-bottom: 1mm;
+}
+
+/* Divider */
+.block-divider {
+  margin: 2mm 0;
+}
+
+.block-divider hr {
+  border: none;
+  border-top: 1px solid var(--np-text);
+}
+
+.block-divider.style-dashed hr {
+  border-top: 1px dashed var(--np-muted);
+}
+
+.block-divider.style-double hr {
+  border-top: 3px double var(--np-text);
+}
+
+.block-divider.style-decorative hr {
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  color: var(--np-accent);
+}
+
+.block-divider.style-decorative hr::after {
+  content: '— ✦ —';
+}
+
+/* Spacer */
+.block-spacer {
+  display: block;
+}
+`;

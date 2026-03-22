@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { updateInstance, updateFeatures } from "./actions";
 import type { InstanceFeatures } from "@/lib/instance/types";
+import { ApiKeysCard } from "@/modules/newspaper/components/api-keys-card";
 export default async function SettingsPage({
   params,
 }: {
@@ -64,7 +65,7 @@ export default async function SettingsPage({
                 id="slug"
                 name="slug"
                 defaultValue={instance.slug}
-                pattern="^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$"
+                pattern="^[a-z0-9][-a-z0-9]{1,46}[a-z0-9]$"
                 required
               />
             </div>
@@ -115,6 +116,8 @@ export default async function SettingsPage({
           </Button>
         </CardContent>
       </Card>
+
+      <ApiKeysCard slug={slug} />
     </div>
   );
 }

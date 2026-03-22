@@ -11,88 +11,15 @@
  *   npx tsx tests/newspaper/generate.ts
  */
 
-import { writeFileSync, mkdirSync, readFileSync, readdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { fetchWeather } from '../../src/modules/newspaper/engine/index';
-import { configToHtml } from '../../src/modules/newspaper/engine/config-to-html';
-import { THEMES, buildThemeCss, type ThemeName } from '../../src/modules/newspaper/engine/themes';
+import { fetchWeather, render } from '../../src/modules/newspaper/engine/index';
 import type {
   NewspaperConfig,
   Block,
   Page,
   WeatherData,
 } from '../../src/modules/newspaper/lib/types';
-
-// Local macOS browsers (fallback when @sparticuz/chromium Linux binary is unavailable)
-const MAC_BROWSERS = [
-  '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/Applications/Chromium.app/Contents/MacOS/Chromium',
-];
-
-async function renderWithLocalBrowser(config: NewspaperConfig): Promise<Buffer> {
-  const html = await configToHtml(config);
-  const themeName = (config.theme ?? 'classic') as ThemeName;
-  const theme = THEMES[themeName] ?? THEMES['classic'];
-  const themeCss = buildThemeCss(theme);
-  const { default: mdToPdf } = await import('md-to-pdf');
-
-  // Try @sparticuz/chromium first (works on Linux/CI)
-  let executablePath: string | undefined;
-  try {
-    const chromium = await import('@sparticuz/chromium');
-    const path = await chromium.default.executablePath();
-    // Verify it's actually executable on this platform
-    const { execSync } = await import('child_process');
-    const fileType = execSync(`file ${JSON.stringify(path)}`).toString();
-    if (!fileType.includes('ELF') || process.platform !== 'linux') {
-      throw new Error('Not a native binary for this platform');
-    }
-    executablePath = path;
-  } catch {
-    // Fall back to a locally installed Chromium-based browser
-    for (const p of MAC_BROWSERS) {
-      if (existsSync(p)) {
-        executablePath = p;
-        break;
-      }
-    }
-  }
-
-  if (!executablePath) {
-    throw new Error(
-      'No Chromium-compatible browser found. Install Google Chrome, Brave, or Chromium.',
-    );
-  }
-
-  const pdf = await mdToPdf(
-    { content: html },
-    {
-      css: themeCss,
-      launch_options: {
-        executablePath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        headless: true,
-      },
-      pdf_options: {
-        format: (config.paper_size ?? 'A4') as 'A4' | 'Letter' | 'A5',
-        landscape: config.orientation === 'landscape',
-        printBackground: true,
-        margin: config.margins
-          ? {
-              top: `${config.margins.top}mm`,
-              right: `${config.margins.right}mm`,
-              bottom: `${config.margins.bottom}mm`,
-              left: `${config.margins.left}mm`,
-            }
-          : { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
-      },
-    },
-  );
-
-  if (!pdf.filename && !pdf.content) throw new Error('PDF rendering produced no output');
-  return pdf.content as Buffer;
-}
 
 const root = process.cwd();
 const configsDir = join(root, 'tests/newspaper/configs');
@@ -161,7 +88,7 @@ async function generateAll() {
       const raw = readFileSync(join(configsDir, file), 'utf-8');
       let config: NewspaperConfig = JSON.parse(raw);
       config = await injectWeatherInConfig(config);
-      const pdf = await renderWithLocalBrowser(config);
+      const pdf = await render(config);
       const outPath = join(outputDir, `${name}.pdf`);
       writeFileSync(outPath, pdf);
       console.log(`✓  (${Math.round(pdf.length / 1024)} KB)`);

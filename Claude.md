@@ -69,6 +69,16 @@ Tickets flow through three folders:
 
 **Planning tickets:** When asked to plan (not implement) a set of tickets, create them in `docs/tickets/backlog/` for user review. The user moves them to `todo/` when ready to implement.
 
+## OpenSpec Workflow
+
+Always follow the explore → propose → implement sequence:
+
+1. `/opsx:explore` — think and investigate only, **never write code**
+2. `/opsx:propose` — capture the proposal **before** any implementation
+3. `/opsx:apply` — implement only after a proposal exists
+
+If the user says "yes let's do that" or similar during explore mode, treat it as confirmation to move to the propose step — not as a signal to implement.
+
 ## Environment Variables
 
 ```

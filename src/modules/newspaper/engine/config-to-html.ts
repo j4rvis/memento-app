@@ -1,7 +1,6 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import type { NewspaperConfig, Block, CalendarEntry } from '../lib/types';
 import { THEMES, type ThemeName } from './themes';
+import { BASE_CSS } from './styles/base-css';
 import { renderTitle } from './blocks/title';
 import { renderMarkdown } from './blocks/markdown';
 import { renderWeather } from './blocks/weather';
@@ -11,7 +10,6 @@ import { renderCalendarDay } from './blocks/calendar-day';
 import { renderDivider } from './blocks/divider';
 import { renderSpacer } from './blocks/spacer';
 
-const baseCssPath = join(__dirname, 'styles', 'base.css');
 
 async function blockToHtml(block: Block, date: string | undefined, globalEntries: CalendarEntry[]): Promise<string> {
   switch (block.type) {
@@ -60,14 +58,6 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
     ? theme.cssVars['--np-font-body']
     : (config.font_family ?? theme.cssVars['--np-font-body']);
 
-  let baseCss = '';
-  try {
-    baseCss = readFileSync(baseCssPath, 'utf-8');
-  } catch {
-    // fallback: inline minimal CSS if file not found at runtime
-    baseCss = '';
-  }
-
   const pageBreakCss = `
     @page { size: ${paperSize} ${orientation}; margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm; }
     body { font-family: ${fontFamily}; font-size: ${fontSize}px; }
@@ -107,7 +97,7 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
   <title>${escHtml(config.title)}</title>
   ${fontsLink}
   <style>
-${baseCss}
+${BASE_CSS}
 ${cssVarBlock}
 ${pageBreakCss}
   </style>

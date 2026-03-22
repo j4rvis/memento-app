@@ -12,13 +12,14 @@ import {
 } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import Link from "next/link";
-import { ArrowLeft, Save, Eye, Plus } from "lucide-react";
+import { ArrowLeft, Save, Eye, Plus, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BlockPalette } from "./block-palette";
 import { PageCard } from "./page-card";
 import { CalendarEntryManager } from "./calendar-entry-manager";
+import { ImportJsonDialog } from "./import-json-dialog";
 import { updateTemplate, renameTemplate } from "@/app/(app)/i/[slug]/newspaper/actions";
 import type { Block, CalendarEntry, NewspaperConfig, Page } from "@/modules/newspaper/lib/types";
 
@@ -69,10 +70,31 @@ export function NewspaperEditorClient({
   const [name, setName] = useState(initialName);
   const [isPending, startTransition] = useTransition();
   const [draggedBlockType, setDraggedBlockType] = useState<Block["type"] | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  // ─── Import ───────────────────────────────────────────────────────────────
+
+  function handleImport(imported: NewspaperConfig) {
+    setConfig(imported);
+    toast.success("Config imported — press Save to persist");
+  }
+
+  // ─── Export ───────────────────────────────────────────────────────────────
+
+  function handleExport() {
+    const json = JSON.stringify(config, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   // ─── Save ─────────────────────────────────────────────────────────────────
 
@@ -278,6 +300,14 @@ export function NewspaperEditorClient({
               entries={config.calendar_entries ?? []}
               onChange={setCalendarEntries}
             />
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import JSON
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export JSON
+            </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/i/${slug}/newspaper/${templateId}/preview`} target="_blank">
                 <Eye className="mr-2 h-4 w-4" />
@@ -338,6 +368,12 @@ export function NewspaperEditorClient({
           </div>
         )}
       </DragOverlay>
+
+      <ImportJsonDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={handleImport}
+      />
     </DndContext>
   );
 }
