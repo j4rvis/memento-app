@@ -1,0 +1,77 @@
+/* Suggestion item: two-column layout */
+.suggestion-item.scryfall-suggestion {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+}
+
+.suggestion-item .scryfall-thumb {
+  flex-shrink: 0;
+  width: 60px;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+
+.suggestion-item .scryfall-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.suggestion-item .scryfall-card-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-item .scryfall-card-mana {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.suggestion-item .scryfall-card-set {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.scryfall-mana-symbol {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+/* Wider set input */
+.scryfall-set-input {
+  width: 100%;
+  min-width: 300px;
+}
+
+/* Set group separator in autocomplete dropdown */
+.scryfall-set-group-separator {
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+  padding: 6px 0 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scryfall-set-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.scryfall-set-code {
+  font-size: 0.85em;
+  opacity: 0.6;
+}
