@@ -80,17 +80,6 @@ async function findExistingNote(
 }
 
 /**
- * Replaces frontmatter in existing note content, preserving body.
- */
-function replaceFrontmatter(existingContent: string, newFrontmatter: string): string {
-  const fmMatch = existingContent.match(/^---\n[\s\S]*?\n---\n?/);
-  if (fmMatch) {
-    return newFrontmatter + "\n" + existingContent.slice(fmMatch[0].length);
-  }
-  return newFrontmatter + "\n" + existingContent;
-}
-
-/**
  * Resolves the file path for a card note, handling filename collisions.
  */
 async function resolveNotePath(
@@ -109,6 +98,51 @@ async function resolveNotePath(
 
   // Collision: different card has same name — append set code
   return normalizePath(`${targetFolder}/${baseName} (${card.set.toUpperCase()}).md`);
+}
+
+const IMAGE_LINE_RE = /^!\[.*?\]\(.*?\)|^!\[\[.*?\]\]/;
+
+/**
+ * Returns the image embed line for the note body, or null if excluded/no image.
+ */
+function buildImageLine(card: ScryfallCard, settings: ScryfallSettings): string | null {
+  if (settings.excludedSets.includes(card.set)) return null;
+
+  if (settings.saveImagesLocally) {
+    const imagePath = normalizePath(`${settings.imagesFolder}/${card.id}.png`);
+    return `![[${imagePath}]]`;
+  }
+
+  const url = getCardImageUrl(card);
+  if (!url) return null;
+  return `![${card.name}](${url})`;
+}
+
+/**
+ * Given existing note body text (without frontmatter), replaces or prepends the image line.
+ */
+function applyImageLine(body: string, imageLine: string | null): string {
+  const lines = body.split("\n");
+
+  let firstContentIdx = 0;
+  while (firstContentIdx < lines.length && lines[firstContentIdx].trim() === "") {
+    firstContentIdx++;
+  }
+
+  const firstLine = lines[firstContentIdx] ?? "";
+  const hasImageLine = IMAGE_LINE_RE.test(firstLine);
+
+  if (imageLine === null) {
+    if (hasImageLine) lines.splice(firstContentIdx, 1);
+    return lines.join("\n");
+  }
+
+  if (hasImageLine) {
+    lines[firstContentIdx] = imageLine;
+  } else {
+    lines.splice(firstContentIdx, 0, imageLine, "");
+  }
+  return lines.join("\n");
 }
 
 export async function upsertCardNote(
@@ -154,13 +188,18 @@ export async function upsertCardNote(
   };
 
   const frontmatter = serializeFrontmatter(fields);
+  const imageLine = buildImageLine(card, settings);
 
   if (existingFile) {
     const content = await app.vault.read(existingFile);
-    await app.vault.modify(existingFile, replaceFrontmatter(content, frontmatter));
+    const fmMatch = content.match(/^---\n[\s\S]*?\n---\n?/);
+    const existingBody = fmMatch ? content.slice(fmMatch[0].length) : content;
+    const newBody = applyImageLine(existingBody, imageLine);
+    await app.vault.modify(existingFile, frontmatter + "\n" + newBody);
     return { file: existingFile, notePath: existingFile.path };
   } else {
-    const file = await app.vault.create(notePath, frontmatter + "\n");
+    const body = imageLine ? imageLine + "\n" : "";
+    const file = await app.vault.create(notePath, frontmatter + "\n" + body);
     return { file, notePath };
   }
 }

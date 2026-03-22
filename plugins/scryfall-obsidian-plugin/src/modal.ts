@@ -1,7 +1,21 @@
 import { App, Editor, Notice, SuggestModal } from "obsidian";
-import { ScryfallCard, searchByName, getCardImageUrl } from "./scryfall";
+import { ScryfallCard, searchByName, getCardImageUrl, getCardSmallImageUrl } from "./scryfall";
 import { upsertCardNote } from "./note-writer";
 import type ScryfallPlugin from "./main";
+
+const SYMBOL_BASE = "https://svgs.scryfall.io/card-symbols/";
+
+function renderManaCost(container: HTMLElement, manaCost: string): void {
+  const tokens = [...manaCost.matchAll(/\{([^}]+)\}/g)];
+  for (const match of tokens) {
+    const code = match[1].replace(/\//g, "");
+    const img = container.createEl("img", { cls: "scryfall-mana-symbol" });
+    img.src = `${SYMBOL_BASE}${code}.svg`;
+    img.width = 16;
+    img.height = 16;
+    img.alt = match[1];
+  }
+}
 
 export class ScryfallSearchModal extends SuggestModal<ScryfallCard> {
   private plugin: ScryfallPlugin;
@@ -21,7 +35,6 @@ export class ScryfallSearchModal extends SuggestModal<ScryfallCard> {
   async getSuggestions(query: string): Promise<ScryfallCard[]> {
     console.log("[Scryfall] getSuggestions called, query:", query);
 
-    // Unblock any previous pending promise
     if (this.pendingResolve) {
       this.pendingResolve([]);
       this.pendingResolve = null;
@@ -59,14 +72,25 @@ export class ScryfallSearchModal extends SuggestModal<ScryfallCard> {
   }
 
   renderSuggestion(card: ScryfallCard, el: HTMLElement): void {
-    el.createEl("span", {
-      cls: "scryfall-card-name",
-      text: card.name,
-    });
-    const meta = el.createEl("small", { cls: "scryfall-card-meta" });
-    if (card.mana_cost) meta.appendText(` ${card.mana_cost}`);
-    meta.appendText(` · ${card.set_name}`);
-    if (card.lang !== "en") meta.appendText(` · ${card.lang.toUpperCase()}`);
+    el.addClass("scryfall-suggestion");
+    const excluded = this.plugin.settings.excludedSets.includes(card.set);
+    const smallUrl = excluded ? undefined : getCardSmallImageUrl(card);
+
+    if (smallUrl) {
+      const img = el.createEl("img", { cls: "scryfall-thumb" });
+      img.src = smallUrl;
+      img.alt = card.name;
+    }
+
+    const info = el.createEl("div", { cls: "scryfall-card-info" });
+    info.createEl("div", { cls: "scryfall-card-name", text: card.name });
+    if (card.mana_cost) {
+      const manaRow = info.createEl("div", { cls: "scryfall-card-mana" });
+      renderManaCost(manaRow, card.mana_cost);
+    }
+    const setRow = info.createEl("div", { cls: "scryfall-card-set" });
+    setRow.appendText(card.set_name);
+    if (card.lang !== "en") setRow.appendText(` · ${card.lang.toUpperCase()}`);
   }
 
   async onChooseSuggestion(card: ScryfallCard): Promise<void> {

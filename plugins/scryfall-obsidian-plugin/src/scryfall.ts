@@ -5,6 +5,12 @@ const SCRYFALL_HEADERS = {
   "User-Agent": "scryfall-obsidian-plugin/1.0",
 };
 
+export interface ScryfallSetInfo {
+  code: string;
+  name: string;
+  set_type: string;
+}
+
 export interface ScryfallCard {
   id: string;
   name: string;
@@ -92,6 +98,30 @@ export function getCardImageUrl(card: ScryfallCard): string | undefined {
     card.image_uris?.normal ??
     card.card_faces?.[0]?.image_uris?.normal
   );
+}
+
+/**
+ * Returns the small thumbnail URL for a card (front face).
+ */
+export function getCardSmallImageUrl(card: ScryfallCard): string | undefined {
+  return (
+    card.image_uris?.small ??
+    card.card_faces?.[0]?.image_uris?.small
+  );
+}
+
+/**
+ * Fetches all sets from the Scryfall API.
+ */
+export async function fetchAllSets(): Promise<ScryfallSetInfo[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/sets`, { headers: SCRYFALL_HEADERS });
+    if (!res.ok) return [];
+    const body = await res.json() as { data: Array<{ code: string; name: string; set_type: string }> };
+    return (body.data ?? []).map(s => ({ code: s.code, name: s.name, set_type: s.set_type ?? "" }));
+  } catch {
+    return [];
+  }
 }
 
 /**
