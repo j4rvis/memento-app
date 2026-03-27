@@ -1,4 +1,4 @@
-const CACHE_VERSION = "2026-03-27T00:00:00.000Z";
+const CACHE_VERSION = "2026-03-27T15:27:23.596Z";
 const STATIC_CACHE = `memento-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `memento-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";

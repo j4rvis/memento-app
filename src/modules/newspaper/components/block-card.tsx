@@ -22,6 +22,8 @@ const BLOCK_LABELS: Record<Block["type"], string> = {
   "calendar-day": "Calendar Day",
   divider: "Divider",
   spacer: "Spacer",
+  articles: "Articles",
+  todos: "Todos",
 };
 
 interface Props {

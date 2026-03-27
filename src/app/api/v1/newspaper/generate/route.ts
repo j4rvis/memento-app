@@ -16,14 +16,14 @@ export async function POST(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const formatJson = url.searchParams.get("format") === "json";
 
-  let body: Record<string, unknown>;
+  let requestBody: Record<string, unknown>;
   try {
-    body = await request.json();
+    requestBody = await request.json();
   } catch {
     return unprocessable("Request body must be valid JSON");
   }
 
-  const { template_id, config: inlineConfig } = body;
+  const { template_id, config: inlineConfig } = requestBody;
 
   if (!template_id && !inlineConfig) {
     return unprocessable("Either template_id or config is required");
@@ -61,7 +61,8 @@ export async function POST(request: Request): Promise<Response> {
     return ok({ generated_at: new Date().toISOString(), size_bytes });
   }
 
-  return new Response(pdfBuffer, {
+  const pdfBody = Buffer.isBuffer(pdfBuffer) ? pdfBuffer.buffer : pdfBuffer;
+  return new Response(pdfBody as ArrayBuffer, {
     status: 200,
     headers: { "content-type": "application/pdf" },
   });

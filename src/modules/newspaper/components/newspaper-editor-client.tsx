@@ -45,6 +45,8 @@ function defaultBlock(type: Block["type"]): Block {
     case "calendar-day": return { type: "calendar-day", date: today, hours: [7, 21] };
     case "divider": return { type: "divider", style: "solid" };
     case "spacer": return { type: "spacer", height_mm: 10 };
+    case "todos": return { type: "todos", query: { filter: "due_today" } };
+    case "articles": return { type: "articles", query: { filter: "unread" } };
   }
 }
 

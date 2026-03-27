@@ -21,6 +21,8 @@ async function blockToHtml(block: Block, date: string | undefined, globalEntries
     case 'calendar-day':  return renderCalendarDay(block, globalEntries);
     case 'divider':       return renderDivider(block);
     case 'spacer':        return renderSpacer(block);
+    case 'todos':         return '';
+    case 'articles':      return '';
   }
 }
 

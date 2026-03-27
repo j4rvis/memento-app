@@ -48,7 +48,7 @@ export function GoogleCalendarSourcePicker({
   const [loadingAccount, setLoadingAccount] = useState<string | null>(null);
   const [syncingAccount, startSyncTransition] = useTransition();
 
-  const totalSelected = sources.reduce((acc, s) => acc + s.calendar_ids.length, 0);
+  const totalSelected = sources.reduce((acc, s) => acc + (s.calendar_ids?.length ?? 0), 0);
 
   function getSource(accountId: string): GoogleCalendarSource | undefined {
     return sources.find((s) => s.account_id === accountId);
@@ -59,7 +59,7 @@ export function GoogleCalendarSourcePicker({
   }
 
   function isCalendarSelected(accountId: string, calendarId: string) {
-    return getSource(accountId)?.calendar_ids.includes(calendarId) ?? false;
+    return getSource(accountId)?.calendar_ids?.includes(calendarId) ?? false;
   }
 
   async function loadCalendars(accountId: string) {
@@ -107,12 +107,13 @@ export function GoogleCalendarSourcePicker({
     onChange(
       sources.map((s) => {
         if (s.account_id !== accountId) return s;
-        const has = s.calendar_ids.includes(calendarId);
+        const ids = s.calendar_ids ?? [];
+        const has = ids.includes(calendarId);
         return {
           ...s,
           calendar_ids: has
-            ? s.calendar_ids.filter((id) => id !== calendarId)
-            : [...s.calendar_ids, calendarId],
+            ? ids.filter((id) => id !== calendarId)
+            : [...ids, calendarId],
         };
       })
     );
