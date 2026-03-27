@@ -5,11 +5,13 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import Link from "next/link";
 import { ArrowLeft, Save, Eye, Plus, Download, Upload } from "lucide-react";
@@ -19,15 +21,17 @@ import { Input } from "@/components/ui/input";
 import { BlockPalette } from "./block-palette";
 import { PageCard } from "./page-card";
 import { CalendarEntryManager } from "./calendar-entry-manager";
+import { GoogleCalendarSourcePicker } from "./google-calendar-source-picker";
 import { ImportJsonDialog } from "./import-json-dialog";
 import { updateTemplate, renameTemplate } from "@/app/(app)/i/[slug]/newspaper/actions";
-import type { Block, CalendarEntry, NewspaperConfig, Page } from "@/modules/newspaper/lib/types";
+import type { Block, CalendarEntry, GoogleCalendarSource, NewspaperConfig, Page } from "@/modules/newspaper/lib/types";
 
 interface Props {
   slug: string;
   templateId: string;
   initialName: string;
   initialConfig: NewspaperConfig;
+  initialAccounts: { id: string; google_email: string }[];
 }
 
 function defaultBlock(type: Block["type"]): Block {
@@ -65,6 +69,7 @@ export function NewspaperEditorClient({
   templateId,
   initialName,
   initialConfig,
+  initialAccounts,
 }: Props) {
   const [config, setConfig] = useState<NewspaperConfig>(initialConfig);
   const [name, setName] = useState(initialName);
@@ -219,40 +224,92 @@ export function NewspaperEditorClient({
     setConfig((prev) => ({ ...prev, calendar_entries: entries }));
   }
 
+  function setGoogleCalendarSources(sources: GoogleCalendarSource[]) {
+    setConfig((prev) => ({ ...prev, google_calendar_sources: sources }));
+  }
+
   // ─── DnD ──────────────────────────────────────────────────────────────────
 
   function handleDragStart(event: DragStartEvent) {
     const { data } = event.active;
     if (data.current?.source === "palette") {
       setDraggedBlockType(data.current.blockType as Block["type"]);
+    } else if (data.current?.source === "canvas") {
+      setDraggedBlockType(data.current.block.type as Block["type"]);
     }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setDraggedBlockType(null);
     const { active, over } = event;
+    console.log("[dnd]", { active: active.data.current, over: over?.id, overData: over?.data.current });
     if (!over) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
+    if (!overData) return;
 
-    if (overData?.pageIndex === undefined || overData?.columnIndex === undefined) return;
-
-    const pageIndex: number = overData.pageIndex;
-    const columnIndex: number = overData.columnIndex;
+    const isOverBlock = overData.source === "canvas";
+    const targetPage: number = overData.pageIndex;
+    const targetCol: number = overData.columnIndex;
 
     if (activeData?.source === "palette") {
-      // Drop from palette → add new block
-      const blockType = activeData.blockType as Block["type"];
-      const newBlock = defaultBlock(blockType);
+      const newBlock = defaultBlock(activeData.blockType as Block["type"]);
       setConfig((prev) => {
         const pages = prev.pages.map((page, pi) => {
-          if (pi !== pageIndex) return page;
-          const blocks = [...getBlocks(page, columnIndex), newBlock];
-          return setBlocks(page, columnIndex, blocks);
+          if (pi !== targetPage) return page;
+          const cols = getBlocks(page, targetCol);
+          const insertAt = isOverBlock ? (overData.blockIndex as number) : cols.length;
+          const updated = [...cols];
+          updated.splice(insertAt, 0, newBlock);
+          return setBlocks(page, targetCol, updated);
         });
         return { ...prev, pages };
       });
+    } else if (activeData?.source === "canvas") {
+      const srcPage: number = activeData.pageIndex;
+      const srcCol: number = activeData.columnIndex;
+      const srcIdx: number = activeData.blockIndex;
+      const block: Block = activeData.block;
+
+      if (srcPage === targetPage && srcCol === targetCol) {
+        // Same column — reorder
+        if (!isOverBlock) return;
+        const targetIdx: number = overData.blockIndex;
+        if (srcIdx === targetIdx) return;
+        setConfig((prev) => {
+          const pages = prev.pages.map((page, pi) => {
+            if (pi !== srcPage) return page;
+            return setBlocks(page, srcCol, arrayMove([...getBlocks(page, srcCol)], srcIdx, targetIdx));
+          });
+          return { ...prev, pages };
+        });
+      } else {
+        // Cross-column / cross-page move
+        const insertAt = isOverBlock ? (overData.blockIndex as number) : undefined;
+        setConfig((prev) => {
+          const pages = prev.pages.map((page, pi) => {
+            if (pi === srcPage && pi === targetPage) {
+              const fromBlocks = getBlocks(page, srcCol).filter((_, i) => i !== srcIdx);
+              const toBlocks = [...getBlocks(page, targetCol)];
+              toBlocks.splice(insertAt ?? toBlocks.length, 0, block);
+              let updated = setBlocks(page, srcCol, fromBlocks);
+              updated = setBlocks(updated, targetCol, toBlocks);
+              return updated;
+            }
+            if (pi === srcPage) {
+              return setBlocks(page, srcCol, getBlocks(page, srcCol).filter((_, i) => i !== srcIdx));
+            }
+            if (pi === targetPage) {
+              const toBlocks = [...getBlocks(page, targetCol)];
+              toBlocks.splice(insertAt ?? toBlocks.length, 0, block);
+              return setBlocks(page, targetCol, toBlocks);
+            }
+            return page;
+          });
+          return { ...prev, pages };
+        });
+      }
     }
   }
 
@@ -261,6 +318,7 @@ export function NewspaperEditorClient({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       modifiers={[restrictToWindowEdges]}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -299,6 +357,12 @@ export function NewspaperEditorClient({
             <CalendarEntryManager
               entries={config.calendar_entries ?? []}
               onChange={setCalendarEntries}
+            />
+            <GoogleCalendarSourcePicker
+              slug={slug}
+              sources={config.google_calendar_sources ?? []}
+              onChange={setGoogleCalendarSources}
+              initialAccounts={initialAccounts}
             />
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />

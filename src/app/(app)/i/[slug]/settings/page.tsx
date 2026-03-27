@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { updateInstance, updateFeatures } from "./actions";
 import type { InstanceFeatures } from "@/lib/instance/types";
 import { ApiKeysCard } from "@/modules/newspaper/components/api-keys-card";
+import { GoogleAccountsCard } from "@/modules/google-calendar/components/google-accounts-card";
 export default async function SettingsPage({
   params,
 }: {
@@ -118,6 +119,8 @@ export default async function SettingsPage({
       </Card>
 
       <ApiKeysCard slug={slug} />
+
+      <GoogleAccountsCard slug={slug} />
     </div>
   );
 }

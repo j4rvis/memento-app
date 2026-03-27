@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
 import {
   GripVertical,
   ChevronUp,
@@ -25,6 +25,7 @@ const BLOCK_LABELS: Record<Block["type"], string> = {
 };
 
 interface Props {
+  id: string;
   block: Block;
   pageIndex: number;
   columnIndex: number;
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export function BlockCard({
+  id,
   block,
   pageIndex,
   columnIndex,
@@ -51,8 +53,8 @@ export function BlockCard({
 }: Props) {
   const [configOpen, setConfigOpen] = useState(false);
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `block-${pageIndex}-${columnIndex}-${blockIndex}`,
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+    id,
     data: {
       source: "canvas",
       block,

@@ -116,6 +116,11 @@ export interface Page {
   column_gap?: number;    // mm between columns, default: 5
 }
 
+export interface GoogleCalendarSource {
+  account_id: string;     // google_accounts.id
+  calendar_ids: string[]; // google_calendar_id values from google_calendars table
+}
+
 export interface NewspaperConfig {
   title: string;
   date?: string;
@@ -126,5 +131,6 @@ export interface NewspaperConfig {
   base_font_size?: number;
   margins?: Margins;
   calendar_entries?: CalendarEntry[];
+  google_calendar_sources?: GoogleCalendarSource[];
   pages: Page[];
 }

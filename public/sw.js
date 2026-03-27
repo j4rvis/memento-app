@@ -1,4 +1,4 @@
-const CACHE_VERSION = "2026-03-21T22:09:55.020Z";
+const CACHE_VERSION = "2026-03-27T00:00:00.000Z";
 const STATIC_CACHE = `memento-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `memento-dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -39,6 +39,9 @@ self.addEventListener("fetch", (event) => {
 
   // Skip non-GET requests (server actions, form submissions)
   if (request.method !== "GET") return;
+
+  // Skip all API routes (OAuth callbacks, auth-sensitive endpoints)
+  if (url.pathname.startsWith("/api/")) return;
 
   // Skip Supabase API calls (auth-sensitive, RLS-dependent)
   if (url.hostname.includes("supabase")) return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 import { BlockCard } from "./block-card";
 import type { Block } from "@/modules/newspaper/lib/types";
@@ -30,6 +31,8 @@ export function ColumnDropzone({
     data: { pageIndex, columnIndex },
   });
 
+  const blockIds = blocks.map((_, i) => `block-${pageIndex}-${columnIndex}-${i}`);
+
   return (
     <div
       ref={setNodeRef}
@@ -37,21 +40,24 @@ export function ColumnDropzone({
         isOver ? "border-primary bg-primary/5" : "border-border"
       }`}
     >
-      {blocks.map((block, blockIndex) => (
-        <BlockCard
-          key={`${pageIndex}-${columnIndex}-${blockIndex}`}
-          block={block}
-          pageIndex={pageIndex}
-          columnIndex={columnIndex}
-          blockIndex={blockIndex}
-          isFirst={blockIndex === 0}
-          isLast={blockIndex === blocks.length - 1}
-          onUpdate={(b) => onUpdateBlock(blockIndex, b)}
-          onDelete={() => onDeleteBlock(blockIndex)}
-          onMoveUp={() => onMoveUp(blockIndex)}
-          onMoveDown={() => onMoveDown(blockIndex)}
-        />
-      ))}
+      <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
+        {blocks.map((block, blockIndex) => (
+          <BlockCard
+            key={`${pageIndex}-${columnIndex}-${blockIndex}`}
+            id={`block-${pageIndex}-${columnIndex}-${blockIndex}`}
+            block={block}
+            pageIndex={pageIndex}
+            columnIndex={columnIndex}
+            blockIndex={blockIndex}
+            isFirst={blockIndex === 0}
+            isLast={blockIndex === blocks.length - 1}
+            onUpdate={(b) => onUpdateBlock(blockIndex, b)}
+            onDelete={() => onDeleteBlock(blockIndex)}
+            onMoveUp={() => onMoveUp(blockIndex)}
+            onMoveDown={() => onMoveDown(blockIndex)}
+          />
+        ))}
+      </SortableContext>
       {blocks.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-1 py-4 text-muted-foreground">
           <Plus className="h-4 w-4 opacity-40" />

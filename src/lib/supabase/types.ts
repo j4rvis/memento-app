@@ -439,172 +439,78 @@ export type Database = {
         }
         Relationships: []
       }
-      newspaper_blocks: {
+      newspaper_api_keys: {
         Row: {
-          block_type: Database["public"]["Enums"]["block_type"]
-          col_span: number
+          created_at: string
+          id: string
+          instance_id: string
+          key_hash: string
+          last_used_at: string | null
+          name: string
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          key_hash: string
+          last_used_at?: string | null
+          name: string
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newspaper_api_keys_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newspaper_templates: {
+        Row: {
           config: Json
           created_at: string
-          grid_col: number | null
-          grid_row: number | null
           id: string
           instance_id: string
-          newspaper_id: string
-          page_index: number
-          row_span: number
-          sort_order: number
-          title: string
+          name: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          block_type: Database["public"]["Enums"]["block_type"]
-          col_span?: number
           config?: Json
           created_at?: string
-          grid_col?: number | null
-          grid_row?: number | null
           id?: string
           instance_id: string
-          newspaper_id: string
-          page_index?: number
-          row_span?: number
-          sort_order?: number
-          title?: string
+          name: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          block_type?: Database["public"]["Enums"]["block_type"]
-          col_span?: number
           config?: Json
           created_at?: string
-          grid_col?: number | null
-          grid_row?: number | null
           id?: string
           instance_id?: string
-          newspaper_id?: string
-          page_index?: number
-          row_span?: number
-          sort_order?: number
-          title?: string
+          name?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "newspaper_blocks_instance_id_fkey"
-            columns: ["instance_id"]
-            isOneToOne: false
-            referencedRelation: "instances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "newspaper_blocks_newspaper_id_fkey"
-            columns: ["newspaper_id"]
-            isOneToOne: false
-            referencedRelation: "newspapers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      newspaper_editions: {
-        Row: {
-          content: Json
-          generated_at: string
-          id: string
-          instance_id: string
-          newspaper_id: string
-          sent_at: string | null
-          sent_to_kindle: boolean
-          title: string
-          user_id: string
-        }
-        Insert: {
-          content?: Json
-          generated_at?: string
-          id?: string
-          instance_id: string
-          newspaper_id: string
-          sent_at?: string | null
-          sent_to_kindle?: boolean
-          title: string
-          user_id: string
-        }
-        Update: {
-          content?: Json
-          generated_at?: string
-          id?: string
-          instance_id?: string
-          newspaper_id?: string
-          sent_at?: string | null
-          sent_to_kindle?: boolean
-          title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "newspaper_editions_instance_id_fkey"
-            columns: ["instance_id"]
-            isOneToOne: false
-            referencedRelation: "instances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "newspaper_editions_newspaper_id_fkey"
-            columns: ["newspaper_id"]
-            isOneToOne: false
-            referencedRelation: "newspapers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      newspapers: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          instance_id: string
-          is_default: boolean
-          kindle_email: string | null
-          layout_config: Json
-          print_config: Json
-          schedule: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          instance_id: string
-          is_default?: boolean
-          kindle_email?: string | null
-          layout_config?: Json
-          print_config?: Json
-          schedule?: string | null
-          title?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          instance_id?: string
-          is_default?: boolean
-          kindle_email?: string | null
-          layout_config?: Json
-          print_config?: Json
-          schedule?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "newspapers_instance_id_fkey"
+            foreignKeyName: "newspaper_templates_instance_id_fkey"
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "instances"
@@ -839,17 +745,6 @@ export type Database = {
       is_instance_owner: { Args: { p_instance_id: string }; Returns: boolean }
     }
     Enums: {
-      block_type:
-        | "weather"
-        | "rss"
-        | "notes"
-        | "text"
-        | "articles"
-        | "todos"
-        | "calendar"
-        | "header"
-        | "quote"
-        | "image"
       content_type: "article" | "youtube" | "other"
       instance_role: "owner" | "admin" | "member"
     }
@@ -979,18 +874,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      block_type: [
-        "weather",
-        "rss",
-        "notes",
-        "text",
-        "articles",
-        "todos",
-        "calendar",
-        "header",
-        "quote",
-        "image",
-      ],
       content_type: ["article", "youtube", "other"],
       instance_role: ["owner", "admin", "member"],
     },
