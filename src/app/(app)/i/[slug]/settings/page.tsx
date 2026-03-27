@@ -120,7 +120,33 @@ export default async function SettingsPage({
 
       <ApiKeysCard slug={slug} />
 
-      <GoogleAccountsCard slug={slug} />
+      <Card>
+        <CardHeader>
+          <CardTitle>API Access</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Manage API clients for external tool integrations (Obsidian, Home Assistant, scripts).
+          </p>
+          <Button asChild variant="outline">
+            <Link href={`/i/${slug}/settings/api`}>Manage API Clients</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Integrations</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Connect third-party services like Google Calendar.
+          </p>
+          <Button asChild variant="outline">
+            <Link href={`/i/${slug}/settings/integrations`}>Manage Integrations</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

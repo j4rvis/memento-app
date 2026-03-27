@@ -1,0 +1,372 @@
+{
+  "info": {
+    "name": "Memento API",
+    "description": "REST API collection for the Memento productivity app. Set the `baseUrl`, `clientId`, and `clientSecret` collection variables to get started.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://your-app.vercel.app",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "mc_your_client_id",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "your_64_char_hex_secret",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.access_token) {",
+                  "  pm.collectionVariables.set('token', json.data.access_token);",
+                  "  console.log('Token saved to collection variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{clientId}}\",\n  \"client_secret\": \"{{clientSecret}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Todos",
+      "item": [
+        {
+          "name": "List Todos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos"]
+            }
+          }
+        },
+        {
+          "name": "Create Todo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Buy milk\",\n  \"priority\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos"]
+            }
+          }
+        },
+        {
+          "name": "Get Todo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Todo",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Todo",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookmarks",
+      "item": [
+        {
+          "name": "List Bookmarks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookmarks?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookmarks"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" },
+                { "key": "is_archived", "value": "false", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Bookmark (URL only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/article\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookmarks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookmarks"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookmark",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookmarks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookmarks", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Bookmark",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookmarks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookmarks", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feeds",
+      "item": [
+        {
+          "name": "List Feeds",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds"]
+            }
+          }
+        },
+        {
+          "name": "Add Feed",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/feed.xml\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds"]
+            }
+          }
+        },
+        {
+          "name": "Get Feed",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Feed",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "List Feed Articles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds/:id/articles?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds", ":id", "articles"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "is_read", "value": "false", "disabled": true }
+              ],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Mark Article Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_read\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feeds/:id/articles/:article_id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feeds", ":id", "articles", ":article_id"],
+              "variable": [
+                { "key": "id", "value": "" },
+                { "key": "article_id", "value": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Google",
+      "item": [
+        {
+          "name": "List Google Accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/google/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "google", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "List Google Calendars",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/google/calendars",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "google", "calendars"],
+              "query": [
+                { "key": "account_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Newspaper",
+      "item": [
+        {
+          "name": "Generate PDF from Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template_id\": \"your-template-uuid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/newspaper/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "newspaper", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Generate PDF (JSON metadata)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template_id\": \"your-template-uuid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/newspaper/generate?format=json",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "newspaper", "generate"],
+              "query": [{ "key": "format", "value": "json" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
