@@ -3,6 +3,7 @@ import type { NewspaperConfig, Block, MarkdownBlock } from './types';
 import { resolveDate } from './resolve-date';
 import { resolveTodosBlock } from './resolve-todos';
 import { resolveArticlesBlock } from './resolve-articles';
+import { fetchWeather } from '../engine/fetchers/weather';
 import {
   resolveCalendarNames,
   resolveGoogleCalendarSources,
@@ -125,6 +126,16 @@ async function resolveBlock(
         ctx.userId,
         ref
       );
+
+    case 'weather': {
+      const forecastDays = block.display === 'current' ? 1 : block.display === 'forecast-3' ? 3 : 5;
+      try {
+        const data = await fetchWeather(block.location, block.unit ?? 'celsius', forecastDays);
+        return { ...block, data };
+      } catch {
+        return block; // data stays undefined → renderer shows "unavailable"
+      }
+    }
 
     case 'calendar-day':
       return { ...block, date: resolveDate(block.date, ref) };

@@ -85,21 +85,52 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
   }
   html += `</tr></thead>`;
 
+  const totalHours = hourEnd - hourStart;
+  // Track rowspan debt per day column independently
+  const rowspanDebt: number[] = new Array(days.length).fill(0);
+
   html += `<tbody>`;
-  for (let hour = hourStart; hour < hourEnd; hour++) {
+  for (let hi = 0; hi < totalHours; hi++) {
+    const hour = hourStart + hi;
     html += `<tr>`;
     html += `<td class="time-col" style="height:${slotHeight}mm;">${hour}:00</td>`;
-    for (const day of days) {
+    for (let di = 0; di < days.length; di++) {
+      const day = days[di];
       const dayStr = isoDate(day);
+      if (rowspanDebt[di] > 0) {
+        rowspanDebt[di]--;
+        // Covered by a previous rowspan — skip this td
+        continue;
+      }
       const entries = (entriesByDay.get(dayStr) ?? []).filter(e => {
         if (e.all_day) return false;
         const h = new Date(e.start_at).getHours();
         return h === hour;
       });
-      html += `<td style="height:${slotHeight}mm;">`;
+
+      // Calculate rowspan from the longest entry in this cell
+      let rowspan = 1;
+      if (entries.length > 0) {
+        rowspan = entries.reduce((max, entry) => {
+          const start = new Date(entry.start_at);
+          const end = new Date(entry.end_at);
+          const durationHours = Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000));
+          const span = Math.min(Math.max(1, durationHours), totalHours - hi);
+          return Math.max(max, span);
+        }, 1);
+        if (rowspan > 1) rowspanDebt[di] = rowspan - 1;
+      }
+
+      const rowspanAttr = rowspan > 1 ? ` rowspan="${rowspan}"` : '';
+      html += `<td${rowspanAttr} style="height:${slotHeight}mm;vertical-align:top;">`;
       for (const entry of entries) {
         const color = entryColor(entry.color);
-        html += `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)}">`;
+        const start = new Date(entry.start_at);
+        const end = new Date(entry.end_at);
+        const durationHours = Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000));
+        const entrySpan = Math.min(Math.max(1, durationHours), totalHours - hi);
+        const entryHeight = entrySpan * slotHeight - 1;
+        html += `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${entryHeight}mm;white-space:normal;overflow:hidden;">`;
         html += `${esc(entry.title)}`;
         html += `</div>`;
       }
