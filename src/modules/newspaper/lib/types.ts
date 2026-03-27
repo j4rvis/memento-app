@@ -69,7 +69,7 @@ export interface WritingLinesBlock {
 
 export interface CalendarWeekBlock {
   type: 'calendar-week';
-  start_date: string;
+  start_date: DateExpr;
   week_start?: 'monday' | 'sunday';
   hours?: [number, number];
   show_week_number?: boolean;
@@ -80,7 +80,7 @@ export interface CalendarWeekBlock {
 
 export interface CalendarDayBlock {
   type: 'calendar-day';
-  date: string;
+  date: DateExpr;
   hours?: [number, number];
   slot_height_mm?: number;
   show_lines?: boolean;
@@ -99,6 +99,57 @@ export interface SpacerBlock {
   height_mm?: number;
 }
 
+/**
+ * A date value accepted wherever an ISO date string was previously used.
+ * The resolver converts all non-ISO expressions to ISO strings before rendering.
+ *
+ * Valid values:
+ *   "today" | "tomorrow" | "yesterday"
+ *   "week-start" (Monday) | "week-end" (Sunday)
+ *   "next-week-start" | "next-week-end"
+ *   "+N" | "-N"  (e.g. "+3", "-1")
+ *   ISO date string (passes through unchanged)
+ */
+export type DateExpr = string;
+
+export interface TodosQuery {
+  filter: 'due_today' | 'due_this_week' | 'overdue' | 'all' | 'upcoming';
+  /** Filter by project name (case-insensitive) */
+  project_name?: string;
+  /** Include completed todos (default: false). Ignored for 'overdue' filter. */
+  include_completed?: boolean;
+  /** Max results (default: 50, hard cap: 100) */
+  limit?: number;
+}
+
+export interface TodosBlock {
+  type: 'todos';
+  title?: string;
+  query: TodosQuery;
+  /** Show priority label (P1/P2/P3) when priority > 0 */
+  show_priority?: boolean;
+  /** Show project name */
+  show_project?: boolean;
+}
+
+export interface ArticlesQuery {
+  filter: 'unread' | 'recent' | 'saved_today' | 'saved_this_week' | 'all';
+  /** Filter by tag name (case-insensitive) */
+  tag_name?: string;
+  /** Max results (default: 10) */
+  limit?: number;
+}
+
+export interface ArticlesBlock {
+  type: 'articles';
+  title?: string;
+  query: ArticlesQuery;
+  /** Show site name after article title */
+  show_site?: boolean;
+  /** Show excerpt below title */
+  show_excerpt?: boolean;
+}
+
 export type Block =
   | MarkdownBlock
   | TitleBlock
@@ -107,7 +158,9 @@ export type Block =
   | CalendarWeekBlock
   | CalendarDayBlock
   | DividerBlock
-  | SpacerBlock;
+  | SpacerBlock
+  | TodosBlock    // resolved to MarkdownBlock before render
+  | ArticlesBlock; // resolved to MarkdownBlock before render
 
 export interface Page {
   layout: 'single' | 'two-column' | 'three-column';
@@ -117,8 +170,9 @@ export interface Page {
 }
 
 export interface GoogleCalendarSource {
-  account_id: string;     // google_accounts.id
-  calendar_ids: string[]; // google_calendar_id values from google_calendars table
+  account_id: string;      // google_accounts.id
+  calendar_ids?: string[]; // google_calendar_id values from google_calendars table
+  calendar_names?: string[]; // human-readable calendar names (resolved to IDs before render)
 }
 
 export interface NewspaperConfig {

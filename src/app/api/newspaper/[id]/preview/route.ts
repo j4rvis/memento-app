@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { render } from "@/modules/newspaper/engine";
-import { resolveGoogleCalendarSources } from "@/modules/newspaper/lib/resolve-google-sources";
-import { syncCalendar, syncCalendarList } from "@/modules/google-calendar/lib/sync";
+import { resolveConfig } from "@/modules/newspaper/lib/resolve-config";
 import type { NewspaperConfig } from "@/modules/newspaper/lib/types";
 
 export async function GET(
@@ -32,26 +31,15 @@ export async function GET(
   try {
     const config = data.config as NewspaperConfig;
     const instanceId = data.instance_id as string;
+    const serviceClient = createServiceRoleClient();
 
-    // Auto-sync Google Calendar events before rendering
-    if (config.google_calendar_sources?.length) {
-      await Promise.all([
-        ...config.google_calendar_sources.map(({ account_id }) =>
-          syncCalendarList(account_id, user.id, instanceId)
-        ),
-        ...config.google_calendar_sources.flatMap(({ account_id, calendar_ids }) =>
-          calendar_ids.map((calId) => syncCalendar(account_id, calId, user.id, instanceId))
-        ),
-      ]);
-    }
+    const resolvedConfig = await resolveConfig(config, {
+      supabase: serviceClient,
+      instanceId,
+      userId: user.id,
+    });
 
-    const googleEntries = await resolveGoogleCalendarSources(config);
-    const mergedConfig: NewspaperConfig = {
-      ...config,
-      calendar_entries: [...(config.calendar_entries ?? []), ...googleEntries],
-    };
-
-    const pdfBuffer = await render(mergedConfig);
+    const pdfBuffer = await render(resolvedConfig);
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {

@@ -1,0 +1,412 @@
+{
+  "info": {
+    "name": "Newspaper API",
+    "_postman_id": "newspaper-api-v1",
+    "description": "Endpoints for the Memento newspaper PDF generation API.\n\n**Setup:**\n1. Set the `base_url` variable to your running app (e.g. `http://localhost:3000`)\n2. Set `template_id` to the UUID of a `newspaper_templates` row\n3. Set `api_key` to a raw API key from `newspaper_api_keys` (the plaintext key shown once on creation)\n\nAPI keys must have the correct scope:\n- `read:pdf` → GET /pdf\n- `write:generate` → POST /generate\n\nKeys can be passed as `Authorization: Bearer <key>` or as `?key=<key>` query param.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL of the running app"
+    },
+    {
+      "key": "template_id",
+      "value": "",
+      "description": "UUID of a newspaper_templates row"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "description": "Raw API key (plaintext, not hashed)"
+    },
+    {
+      "key": "instance_id",
+      "value": "",
+      "description": "Workspace UUID — required only for session-auth calls to /render"
+    }
+  ],
+  "item": [
+    {
+      "name": "API Key Auth",
+      "description": "Endpoints that accept API key authentication (Bearer header or ?key= query param). Keys must be created via the app UI under the template's API Keys section.",
+      "item": [
+        {
+          "name": "Download PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "description": "Alternatively, use ?key={{api_key}} as a query parameter"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "Returns the newspaper as a PDF attachment.\n\nRequired scope: `read:pdf`\n\nThe config is resolved at request time — DateExpr values like `\"today\"` and dynamic blocks like `todos`/`articles` are evaluated fresh on each call."
+          },
+          "response": [
+            {
+              "name": "200 OK — PDF file",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/pdf" },
+                { "key": "Content-Disposition", "value": "attachment; filename=\"my-paper-2026-03-27.pdf\"" }
+              ],
+              "body": "(binary PDF)"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Unauthorized\" }"
+            },
+            {
+              "name": "403 Forbidden — missing scope",
+              "status": "Forbidden",
+              "code": 403,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Forbidden\" }"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Not found\" }"
+            }
+          ]
+        },
+        {
+          "name": "Download PDF (key as query param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf?key={{api_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{api_key}}",
+                  "description": "Raw API key (alternative to Authorization header)"
+                }
+              ]
+            },
+            "description": "Same as 'Download PDF' but uses the `?key=` query parameter instead of the Authorization header. Useful for direct browser links or curl without headers.\n\nRequired scope: `read:pdf`"
+          },
+          "response": []
+        },
+        {
+          "name": "List Google Accounts & Calendars",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/calendars",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "calendars"]
+            },
+            "description": "Returns all Google accounts connected to the instance, with their calendars.\n\nUse the returned `account_id` and calendar `name` values when building configs:\n```json\n{\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<account_id from response>\",\n      \"calendar_names\": [\"<name from response>\"]\n    }\n  ]\n}\n```\n\nRequired scope: `read:pdf`"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"accounts\": [\n    {\n      \"account_id\": \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\",\n      \"email\": \"user@gmail.com\",\n      \"calendars\": [\n        { \"id\": \"work@group.calendar.google.com\", \"name\": \"Work\", \"color\": \"#4285F4\" },\n        { \"id\": \"user@gmail.com\", \"name\": \"Personal\", \"color\": \"#0F9D58\" }\n      ]\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 OK — no accounts connected",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"accounts\": [] }"
+            }
+          ]
+        },
+        {
+          "name": "Trigger Generation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "generate"]
+            },
+            "description": "Renders the newspaper PDF and returns metadata (size, timestamp). Does not stream the PDF — use the `/pdf` endpoint to download it.\n\nRequired scope: `write:generate`\n\nUseful for cron-triggered generation where you want to confirm success without downloading the file."
+          },
+          "response": [
+            {
+              "name": "200 OK — generation metadata",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"path\": null,\n  \"generated_at\": \"2026-03-27T08:00:00.000Z\",\n  \"size_bytes\": 142857\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Unauthorized\" }"
+            },
+            {
+              "name": "500 Render Failed",
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Render failed\" }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ad-hoc Render",
+      "description": "POST /api/newspaper/render — pass a NewspaperConfig body directly. Nothing is stored; the config is resolved and rendered on the fly. Requires an API key with read:pdf scope.",
+      "item": [
+        {
+          "name": "Render config (minimal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Paper\",\n  \"date\": \"today\",\n  \"theme\": \"classic\",\n  \"pages\": [\n    {\n      \"layout\": \"single\",\n      \"blocks\": [\n        { \"type\": \"title\", \"text\": \"Test Paper\", \"date_format\": \"EEEE, MMMM d, yyyy\", \"style\": \"newspaper\" },\n        { \"type\": \"markdown\", \"content\": \"Hello from the ad-hoc render endpoint.\" }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/render",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "render"]
+            },
+            "description": "Simplest possible config — no dynamic queries. Good for verifying the endpoint works before adding todos/articles blocks."
+          },
+          "response": []
+        },
+        {
+          "name": "Render config (todos + articles + date expressions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Daily Brief\",\n  \"date\": \"today\",\n  \"theme\": \"classic\",\n  \"paper_size\": \"A4\",\n  \"orientation\": \"portrait\",\n  \"pages\": [\n    {\n      \"layout\": \"two-column\",\n      \"columns\": [\n        [\n          {\n            \"type\": \"title\",\n            \"text\": \"Daily Brief\",\n            \"date_format\": \"EEEE, MMMM d, yyyy\",\n            \"style\": \"newspaper\",\n            \"border\": \"both\"\n          },\n          {\n            \"type\": \"calendar-day\",\n            \"date\": \"today\",\n            \"hours\": [8, 20],\n            \"use_global_entries\": true\n          },\n          {\n            \"type\": \"todos\",\n            \"title\": \"Today's Tasks\",\n            \"query\": { \"filter\": \"due_today\" },\n            \"show_priority\": true,\n            \"show_project\": true\n          },\n          {\n            \"type\": \"todos\",\n            \"title\": \"Overdue\",\n            \"query\": { \"filter\": \"overdue\", \"limit\": 5 },\n            \"show_priority\": true\n          }\n        ],\n        [\n          {\n            \"type\": \"weather\",\n            \"location\": \"Berlin\",\n            \"unit\": \"celsius\",\n            \"display\": \"forecast-3\"\n          },\n          {\n            \"type\": \"calendar-week\",\n            \"start_date\": \"week-start\",\n            \"use_global_entries\": true,\n            \"show_week_number\": true\n          },\n          {\n            \"type\": \"articles\",\n            \"title\": \"Reading List\",\n            \"query\": { \"filter\": \"unread\", \"limit\": 8 },\n            \"show_site\": true\n          }\n        ]\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/render",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "render"]
+            },
+            "description": "Full config using all dynamic resolver features: DateExpr, TodosBlock, ArticlesBlock, and WeatherBlock. No Google Calendar sources included here — add google_calendar_sources if you have a connected account."
+          },
+          "response": []
+        },
+        {
+          "name": "Render config (calendar names)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Calendar View\",\n  \"date\": \"today\",\n  \"theme\": \"classic\",\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<replace-with-google_accounts.id>\",\n      \"calendar_names\": [\"Work\", \"Personal\"]\n    }\n  ],\n  \"pages\": [\n    {\n      \"layout\": \"single\",\n      \"blocks\": [\n        {\n          \"type\": \"calendar-day\",\n          \"date\": \"today\",\n          \"hours\": [8, 20],\n          \"use_global_entries\": true\n        }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/render",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "render"]
+            },
+            "description": "Config with Google Calendar sources specified by name instead of ID. Replace the account_id value with a real UUID from the google_accounts table."
+          },
+          "response": []
+        },
+        {
+          "name": "Render config (session auth + instance_id)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test\",\n  \"date\": \"today\",\n  \"pages\": [\n    {\n      \"layout\": \"single\",\n      \"blocks\": [\n        { \"type\": \"markdown\", \"content\": \"Session auth test\" }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/render?instance_id={{instance_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "render"],
+              "query": [
+                {
+                  "key": "instance_id",
+                  "value": "{{instance_id}}",
+                  "description": "Required when using session cookie auth (no API key)"
+                }
+              ]
+            },
+            "description": "Uses session cookie auth instead of an API key. Add an `instance_id` collection variable with your workspace UUID. The session cookie must be set (easiest from a browser that's logged in)."
+          },
+          "response": [
+            {
+              "name": "400 — missing instance_id",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"instance_id query parameter required for session auth\" }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Session Auth",
+      "description": "Endpoints that require a browser session cookie (Supabase auth). Use these from a browser or after logging in and extracting the session cookie.",
+      "item": [
+        {
+          "name": "Preview PDF (inline)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "sb-clqihjujzadhiyreyvbf-auth-token=<your-session-token>",
+                "description": "Extract this from the browser DevTools → Application → Cookies after logging in",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/preview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "preview"]
+            },
+            "description": "Returns the newspaper as an inline PDF (Content-Disposition: inline).\n\nRequires a valid Supabase session cookie — no API key accepted. Easiest to test by opening the URL directly in a browser while logged in."
+          },
+          "response": [
+            {
+              "name": "200 OK — inline PDF",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/pdf" },
+                { "key": "Content-Disposition", "value": "inline" }
+              ],
+              "body": "(binary PDF)"
+            },
+            {
+              "name": "401 Unauthorized — no session",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{ \"error\": \"Unauthorized\" }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dynamic Config Examples",
+      "description": "These are not real HTTP requests — they are reference examples showing config JSON you can write directly to the `newspaper_templates.config` column to use the new dynamic resolver features.\n\nUpdate a template's config via the Supabase dashboard SQL editor:\n  UPDATE newspaper_templates SET config = '<json>'::jsonb WHERE id = '<template_id>';",
+      "item": [
+        {
+          "name": "[Reference] Full dynamic config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "Example config with all dynamic resolver features enabled.\n\nPaste this into `newspaper_templates.config` to test everything at once:\n\n```json\n{\n  \"title\": \"Daily Brief\",\n  \"date\": \"today\",\n  \"theme\": \"classic\",\n  \"paper_size\": \"A4\",\n  \"orientation\": \"portrait\",\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<google_accounts.id>\",\n      \"calendar_names\": [\"Work\", \"Personal\"]\n    }\n  ],\n  \"pages\": [\n    {\n      \"layout\": \"two-column\",\n      \"columns\": [\n        [\n          {\n            \"type\": \"title\",\n            \"text\": \"Daily Brief\",\n            \"date_format\": \"EEEE, MMMM d, yyyy\",\n            \"style\": \"newspaper\",\n            \"border\": \"both\"\n          },\n          {\n            \"type\": \"calendar-day\",\n            \"date\": \"today\",\n            \"hours\": [8, 20],\n            \"use_global_entries\": true\n          },\n          {\n            \"type\": \"todos\",\n            \"title\": \"Today's Tasks\",\n            \"query\": {\n              \"filter\": \"due_today\"\n            },\n            \"show_priority\": true,\n            \"show_project\": true\n          },\n          {\n            \"type\": \"todos\",\n            \"title\": \"Overdue\",\n            \"query\": {\n              \"filter\": \"overdue\",\n              \"limit\": 5\n            },\n            \"show_priority\": true\n          }\n        ],\n        [\n          {\n            \"type\": \"weather\",\n            \"location\": \"Berlin\",\n            \"unit\": \"celsius\",\n            \"display\": \"forecast-3\"\n          },\n          {\n            \"type\": \"calendar-week\",\n            \"start_date\": \"week-start\",\n            \"use_global_entries\": true,\n            \"show_week_number\": true\n          },\n          {\n            \"type\": \"articles\",\n            \"title\": \"Reading List\",\n            \"query\": {\n              \"filter\": \"unread\",\n              \"limit\": 8\n            },\n            \"show_site\": true,\n            \"show_excerpt\": false\n          }\n        ]\n      ]\n    }\n  ]\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "[Reference] DateExpr values",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "All supported DateExpr values for `date` (top-level config), `calendar-day.date`, and `calendar-week.start_date`:\n\n| Expression       | Resolves to                          |\n|------------------|--------------------------------------|\n| `\"today\"`        | Current date (YYYY-MM-DD)            |\n| `\"tomorrow\"`     | Current date + 1 day                 |\n| `\"yesterday\"`    | Current date - 1 day                 |\n| `\"week-start\"`   | Monday of current week               |\n| `\"week-end\"`     | Sunday of current week               |\n| `\"next-week-start\"` | Monday of next week               |\n| `\"next-week-end\"`   | Sunday of next week               |\n| `\"+3\"`           | Current date + 3 days                |\n| `\"-2\"`           | Current date - 2 days                |\n| `\"2026-03-27\"`   | Passed through unchanged (ISO date)  |\n\nExamples:\n```json\n{ \"type\": \"calendar-day\", \"date\": \"today\" }\n{ \"type\": \"calendar-day\", \"date\": \"tomorrow\" }\n{ \"type\": \"calendar-week\", \"start_date\": \"week-start\" }\n{ \"type\": \"calendar-week\", \"start_date\": \"next-week-start\" }\n{ \"date\": \"+3\" }\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "[Reference] TodosBlock options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "TodosBlock is resolved to a MarkdownBlock before rendering.\n\n**filter values:**\n- `due_today` — todos due on the current date\n- `due_this_week` — todos due between today and end of week (Sunday)\n- `overdue` — incomplete todos with a due date in the past\n- `upcoming` — todos due after today, ordered by date\n- `all` — all todos (respects include_completed)\n\n**Full schema:**\n```json\n{\n  \"type\": \"todos\",\n  \"title\": \"Section heading (optional)\",\n  \"query\": {\n    \"filter\": \"due_today\",\n    \"project_name\": \"Work\",\n    \"include_completed\": false,\n    \"limit\": 20\n  },\n  \"show_priority\": true,\n  \"show_project\": true\n}\n```\n\n**Notes:**\n- `project_name` is matched case-insensitively\n- `include_completed` is always `false` for the `overdue` filter\n- `limit` defaults to 50, hard capped at 100\n- Priority labels: `P1` (low) → `P2` (medium) → `P3` (high)"
+          },
+          "response": []
+        },
+        {
+          "name": "[Reference] ArticlesBlock options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "ArticlesBlock is resolved to a MarkdownBlock before rendering.\n\n**filter values:**\n- `unread` — unarchived articles not yet marked as read\n- `recent` — all unarchived articles, newest first\n- `saved_today` — articles saved since midnight today\n- `saved_this_week` — articles saved since Monday of the current week\n- `all` — all unarchived articles\n\n**Full schema:**\n```json\n{\n  \"type\": \"articles\",\n  \"title\": \"Reading List\",\n  \"query\": {\n    \"filter\": \"unread\",\n    \"tag_name\": \"tech\",\n    \"limit\": 10\n  },\n  \"show_site\": true,\n  \"show_excerpt\": true\n}\n```\n\n**Notes:**\n- `tag_name` is matched case-insensitively against `article_tags.name`\n- `limit` defaults to 10\n- Archived articles are always excluded\n- `show_excerpt` truncates to 120 characters"
+          },
+          "response": []
+        },
+        {
+          "name": "[Reference] Calendar names (instead of IDs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/newspaper/{{template_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "newspaper", "{{template_id}}", "pdf"]
+            },
+            "description": "Instead of specifying Google Calendar IDs (opaque strings), you can now use human-readable calendar names.\n\n**Before (calendar IDs required):**\n```json\n{\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<uuid>\",\n      \"calendar_ids\": [\"work@group.calendar.google.com\", \"personal@gmail.com\"]\n    }\n  ]\n}\n```\n\n**After (names resolved automatically):**\n```json\n{\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<uuid>\",\n      \"calendar_names\": [\"Work\", \"Personal\"]\n    }\n  ]\n}\n```\n\n**You can also mix both:**\n```json\n{\n  \"google_calendar_sources\": [\n    {\n      \"account_id\": \"<uuid>\",\n      \"calendar_ids\": [\"known-calendar-id\"],\n      \"calendar_names\": [\"Another Calendar\"]\n    }\n  ]\n}\n```\n\nNames are matched case-insensitively. Unknown names are silently skipped."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
