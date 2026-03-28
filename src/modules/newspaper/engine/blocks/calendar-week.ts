@@ -40,6 +40,10 @@ function getWeekNumber(date: Date): number {
   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
+function renderEntryDiv(entry: CalendarEntry, heightMm: number, color: string): string {
+  return `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${heightMm}mm;white-space:normal;overflow:hidden;">${esc(entry.title)}</div>`;
+}
+
 export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: CalendarEntry[] = []): string {
   const weekStart = block.week_start ?? 'monday';
   const [hourStart, hourEnd] = block.hours ?? [8, 20];
@@ -48,7 +52,6 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
 
   // Compute the 7 days of the week
   const startDate = new Date(block.start_date + 'T00:00:00');
-  // If weekStart is 'monday', ensure startDate is Monday
   const startOffset = weekStart === 'monday' ? (startDate.getDay() + 6) % 7 : startDate.getDay();
   const monday = addDays(startDate, -startOffset);
   const days: Date[] = Array.from({ length: 7 }, (_, i) => addDays(monday, weekStart === 'monday' ? i : i));
@@ -58,17 +61,31 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
     ...(block.entries ?? []),
   ];
 
-  // Filter entries to this week
+  // Filter entries to this week, separated into all-day and timed
   const weekDates = days.map(isoDate);
-  const entriesByDay: Map<string, CalendarEntry[]> = new Map();
-  for (const day of weekDates) entryMap(entriesByDay, day);
+  const allDayByDay: Map<string, CalendarEntry[]> = new Map();
+  const timedByDay: Map<string, CalendarEntry[]> = new Map();
+  for (const day of weekDates) {
+    allDayByDay.set(day, []);
+    timedByDay.set(day, []);
+  }
 
   for (const entry of allEntries) {
     const entryDate = entry.start_at.slice(0, 10);
-    if (weekDates.includes(entryDate)) {
-      entriesByDay.get(entryDate)!.push(entry);
+    if (!weekDates.includes(entryDate)) continue;
+    if (entry.all_day) {
+      allDayByDay.get(entryDate)!.push(entry);
+    } else {
+      timedByDay.get(entryDate)!.push(entry);
     }
   }
+
+  // All-day row count = max all-day events across any single day
+  const allDayRowCount = Math.max(0, ...weekDates.map(d => allDayByDay.get(d)!.length));
+
+  // Trim time range: 1 hour per all-day row beyond the first 2
+  const trimRows = Math.max(0, allDayRowCount - 2);
+  const totalHours = Math.max(0, (hourEnd - hourStart) - trimRows);
 
   let html = `<div class="block-calendar-week">`;
 
@@ -85,30 +102,46 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
   }
   html += `</tr></thead>`;
 
-  const totalHours = hourEnd - hourStart;
+  html += `<tbody>`;
+
+  // All-day rows (one per row, up to allDayRowCount)
+  for (let rowIdx = 0; rowIdx < allDayRowCount; rowIdx++) {
+    html += `<tr>`;
+    html += `<td class="time-col" style="height:${slotHeight}mm;font-size:0.8em;color:#888;"></td>`;
+    for (const dayStr of weekDates) {
+      const dayAllDay = allDayByDay.get(dayStr)!;
+      const entry = dayAllDay[rowIdx];
+      html += `<td style="height:${slotHeight}mm;vertical-align:top;">`;
+      if (entry) {
+        const color = entryColor(entry.color);
+        html += renderEntryDiv(entry, slotHeight - 1, color);
+      }
+      html += `</td>`;
+    }
+    html += `</tr>`;
+  }
+
   // Track rowspan debt per day column independently
   const rowspanDebt: number[] = new Array(days.length).fill(0);
 
-  html += `<tbody>`;
+  // Timed rows
   for (let hi = 0; hi < totalHours; hi++) {
     const hour = hourStart + hi;
     html += `<tr>`;
     html += `<td class="time-col" style="height:${slotHeight}mm;">${hour}:00</td>`;
     for (let di = 0; di < days.length; di++) {
-      const day = days[di];
-      const dayStr = isoDate(day);
+      const dayStr = weekDates[di];
       if (rowspanDebt[di] > 0) {
         rowspanDebt[di]--;
-        // Covered by a previous rowspan — skip this td
         continue;
       }
-      const entries = (entriesByDay.get(dayStr) ?? []).filter(e => {
+      const entries = (timedByDay.get(dayStr) ?? []).filter(e => {
+        // all_day entries are excluded — they are already shown in the all-day section above
         if (e.all_day) return false;
         const h = new Date(e.start_at).getHours();
         return h === hour;
       });
 
-      // Calculate rowspan from the longest entry in this cell
       let rowspan = 1;
       if (entries.length > 0) {
         rowspan = entries.reduce((max, entry) => {
@@ -130,9 +163,7 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
         const durationHours = Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000));
         const entrySpan = Math.min(Math.max(1, durationHours), totalHours - hi);
         const entryHeight = entrySpan * slotHeight - 1;
-        html += `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${entryHeight}mm;white-space:normal;overflow:hidden;">`;
-        html += `${esc(entry.title)}`;
-        html += `</div>`;
+        html += renderEntryDiv(entry, entryHeight, color);
       }
       html += `</td>`;
     }
@@ -140,8 +171,4 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
   }
   html += `</tbody></table></div>`;
   return html;
-}
-
-function entryMap(map: Map<string, CalendarEntry[]>, key: string) {
-  if (!map.has(key)) map.set(key, []);
 }

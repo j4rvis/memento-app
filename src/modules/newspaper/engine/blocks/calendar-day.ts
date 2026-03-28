@@ -25,6 +25,10 @@ function calcRowspan(entry: CalendarEntry, slotIndex: number, totalSlots: number
   return Math.min(Math.max(1, durationSlots), totalSlots - slotIndex);
 }
 
+function renderEntryCell(entry: CalendarEntry, heightMm: number, color: string): string {
+  return `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${heightMm}mm;white-space:normal;overflow:hidden;">${esc(entry.title)}</div>`;
+}
+
 export function renderCalendarDay(block: CalendarDayBlock, globalEntries: CalendarEntry[] = []): string {
   const [hourStart, hourEnd] = block.hours ?? [7, 21];
   const slotHeight = block.slot_height_mm ?? 5;
@@ -38,17 +42,22 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
   ];
 
   // Filter entries to this day
-  const dayEntries = allEntries.filter(e => {
-    if (e.all_day) return e.start_at.slice(0, 10) === dateStr;
-    return e.start_at.slice(0, 10) === dateStr;
-  });
+  const dayEntries = allEntries.filter(e => e.start_at.slice(0, 10) === dateStr);
 
-  // Build 30-min slots
+  // Separate full-day from timed
+  const allDayEntries = dayEntries.filter(e => e.all_day);
+  const timedEntries = dayEntries.filter(e => !e.all_day);
+
+  // Trim time range: 1 slot (30 min) per all-day event beyond the first 2
+  const trimSlots = Math.max(0, allDayEntries.length - 2);
+
+  // Build 30-min slots (trimmed from end)
   const slots: { label: string; hour: number; minute: number }[] = [];
   for (let h = hourStart; h < hourEnd; h++) {
     slots.push({ label: `${String(h).padStart(2, '0')}:00`, hour: h, minute: 0 });
     slots.push({ label: '', hour: h, minute: 30 });
   }
+  const trimmedSlots = slots.slice(0, slots.length - trimSlots);
 
   let html = `<div class="block-calendar-day">`;
   html += `<table>`;
@@ -58,12 +67,23 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
   html += `</tr></thead>`;
   html += `<tbody>`;
 
-  let rowspanDebt = 0; // rows already covered by a previous td's rowspan
+  // All-day rows (one per event)
+  for (const entry of allDayEntries) {
+    const color = entryColor(entry.color);
+    html += `<tr>`;
+    html += `<td class="time-col" style="height:${slotHeight}mm;font-size:0.8em;color:#888;"></td>`;
+    html += `<td style="height:${slotHeight}mm;vertical-align:top;">`;
+    html += renderEntryCell(entry, slotHeight - 1, color);
+    html += `</td>`;
+    html += `</tr>`;
+  }
 
-  for (let i = 0; i < slots.length; i++) {
-    const slot = slots[i];
-    const slotEntries = dayEntries.filter(e => {
-      if (e.all_day) return slot.hour === hourStart && slot.minute === 0;
+  // Timed rows
+  let rowspanDebt = 0;
+
+  for (let i = 0; i < trimmedSlots.length; i++) {
+    const slot = trimmedSlots[i];
+    const slotEntries = timedEntries.filter(e => {
       const start = new Date(e.start_at);
       return start.getHours() === slot.hour &&
         (slot.minute === 0 ? start.getMinutes() < 30 : start.getMinutes() >= 30);
@@ -74,13 +94,11 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
 
     if (rowspanDebt > 0) {
       rowspanDebt--;
-      // This cell is covered by a previous rowspan — no td rendered
     } else {
-      // Calculate rowspan: use the longest-duration entry in this slot
       let rowspan = 1;
       if (slotEntries.length > 0) {
         rowspan = slotEntries.reduce((max, entry) => {
-          return Math.max(max, calcRowspan(entry, i, slots.length));
+          return Math.max(max, calcRowspan(entry, i, trimmedSlots.length));
         }, 1);
         if (rowspan > 1) rowspanDebt = rowspan - 1;
       }
@@ -90,11 +108,9 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
       html += `<td${rowspanAttr} style="height:${slotHeight}mm;${borderStyle}vertical-align:top;">`;
       for (const entry of slotEntries) {
         const color = entryColor(entry.color);
-        const entrySpan = calcRowspan(entry, i, slots.length);
+        const entrySpan = calcRowspan(entry, i, trimmedSlots.length);
         const entryHeight = entrySpan * slotHeight - 1;
-        html += `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${entryHeight}mm;white-space:normal;overflow:hidden;">`;
-        html += esc(entry.title);
-        html += `</div>`;
+        html += renderEntryCell(entry, entryHeight, color);
       }
       html += `</td>`;
     }
