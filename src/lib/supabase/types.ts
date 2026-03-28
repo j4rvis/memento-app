@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_clients: {
+        Row: {
+          client_id: string
+          client_secret_hash: string
+          created_at: string
+          id: string
+          instance_id: string
+          is_active: boolean
+          last_used_at: string | null
+          name: string
+          scopes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          client_secret_hash: string
+          created_at?: string
+          id?: string
+          instance_id: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name: string
+          scopes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          client_secret_hash?: string
+          created_at?: string
+          id?: string
+          instance_id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          scopes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_clients_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_tags: {
         Row: {
           created_at: string
@@ -133,6 +183,59 @@ export type Database = {
           },
         ]
       }
+      external_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          instance_id: string
+          provider: string
+          provider_user_id: string
+          provider_username: string
+          refresh_token: string | null
+          scopes: string[]
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          instance_id: string
+          provider: string
+          provider_user_id: string
+          provider_username: string
+          refresh_token?: string | null
+          scopes?: string[]
+          token_expires_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          instance_id?: string
+          provider?: string
+          provider_user_id?: string
+          provider_username?: string
+          refresh_token?: string | null
+          scopes?: string[]
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_connections_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_entries: {
         Row: {
           author: string | null
@@ -209,11 +312,15 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          external_connection_id: string | null
           fetch_error: string | null
           icon_url: string | null
           id: string
           instance_id: string
           last_fetched_at: string | null
+          provider: string
+          provider_resource_id: string | null
+          provider_resource_type: string | null
           site_url: string | null
           title: string
           updated_at: string
@@ -223,11 +330,15 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          external_connection_id?: string | null
           fetch_error?: string | null
           icon_url?: string | null
           id?: string
           instance_id: string
           last_fetched_at?: string | null
+          provider?: string
+          provider_resource_id?: string | null
+          provider_resource_type?: string | null
           site_url?: string | null
           title: string
           updated_at?: string
@@ -237,11 +348,15 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          external_connection_id?: string | null
           fetch_error?: string | null
           icon_url?: string | null
           id?: string
           instance_id?: string
           last_fetched_at?: string | null
+          provider?: string
+          provider_resource_id?: string | null
+          provider_resource_type?: string | null
           site_url?: string | null
           title?: string
           updated_at?: string
@@ -249,6 +364,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feeds_external_connection_id_fkey"
+            columns: ["external_connection_id"]
+            isOneToOne: false
+            referencedRelation: "external_connections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feeds_instance_id_fkey"
             columns: ["instance_id"]
@@ -367,6 +489,60 @@ export type Database = {
           },
           {
             foreignKeyName: "google_calendar_events_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_calendars: {
+        Row: {
+          access_role: string | null
+          color: string | null
+          description: string | null
+          google_account_id: string
+          google_calendar_id: string
+          id: string
+          instance_id: string
+          name: string
+          synced_at: string
+          user_id: string
+        }
+        Insert: {
+          access_role?: string | null
+          color?: string | null
+          description?: string | null
+          google_account_id: string
+          google_calendar_id: string
+          id?: string
+          instance_id: string
+          name: string
+          synced_at?: string
+          user_id: string
+        }
+        Update: {
+          access_role?: string | null
+          color?: string | null
+          description?: string | null
+          google_account_id?: string
+          google_calendar_id?: string
+          id?: string
+          instance_id?: string
+          name?: string
+          synced_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_calendars_google_account_id_fkey"
+            columns: ["google_account_id"]
+            isOneToOne: false
+            referencedRelation: "google_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_calendars_instance_id_fkey"
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "instances"
