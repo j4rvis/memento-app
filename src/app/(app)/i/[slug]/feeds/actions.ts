@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceIdFromSlug } from "@/lib/instance/server";
 import { parseFeed } from "@/modules/feeds/lib/feed-parser";
+import { decryptToken } from "@/modules/external-feeds/lib/encryption";
+import { fetchUserLists, fetchAuthenticatedUser } from "@/modules/external-feeds/lib/x-api";
 
 export async function addFeed(slug: string, formData: FormData) {
   const supabase = await createClient();
@@ -134,6 +136,85 @@ export async function markAllAsRead(slug: string, feedId: string) {
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/feeds`);
   revalidatePath(`/i/${slug}/feeds/${feedId}`);
+}
+
+export interface XResource {
+  id: string;
+  name: string;
+  type: "list" | "user";
+}
+
+export async function getXResources(slug: string): Promise<XResource[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const instanceId = await getInstanceIdFromSlug(slug);
+
+  const { data: connection } = await supabase
+    .from("external_connections")
+    .select("provider_user_id, access_token")
+    .eq("instance_id", instanceId)
+    .eq("user_id", user.id)
+    .eq("provider", "x")
+    .single();
+
+  if (!connection) return [];
+
+  const accessToken = decryptToken(connection.access_token, process.env.X_TOKEN_SECRET!);
+
+  const [xUser, lists] = await Promise.all([
+    fetchAuthenticatedUser(accessToken),
+    fetchUserLists(accessToken, connection.provider_user_id),
+  ]);
+
+  return [
+    { id: xUser.id, name: `@${xUser.username} (your timeline)`, type: "user" as const },
+    ...lists.map((l) => ({ id: l.id, name: l.name, type: "list" as const })),
+  ];
+}
+
+export async function subscribeToXResource(
+  slug: string,
+  resourceId: string,
+  resourceType: "list" | "user",
+  resourceName: string
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const instanceId = await getInstanceIdFromSlug(slug);
+
+  const { data: connection } = await supabase
+    .from("external_connections")
+    .select("id")
+    .eq("instance_id", instanceId)
+    .eq("user_id", user.id)
+    .eq("provider", "x")
+    .single();
+
+  if (!connection) throw new Error("No X connection found");
+
+  const { error } = await supabase.from("feeds").insert({
+    user_id: user.id,
+    instance_id: instanceId,
+    title: resourceType === "user" ? `@${resourceName}` : resourceName,
+    url: resourceType === "list"
+      ? `https://x.com/i/lists/${resourceId}`
+      : `https://x.com/${resourceName}`,
+    provider: "x",
+    external_connection_id: connection.id,
+    provider_resource_id: resourceId,
+    provider_resource_type: resourceType,
+  });
+
+  if (error) {
+    if (error.code === "23505") throw new Error("Already subscribed to this feed");
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/i/${slug}/feeds`);
 }
 
 export async function toggleStar(slug: string, entryId: string) {

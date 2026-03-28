@@ -5,7 +5,7 @@ import { API_SCOPES } from "@/lib/api/types";
 import { parseFeed } from "@/modules/feeds/lib/feed-parser";
 
 const FEED_FIELDS =
-  "id,title,url,site_url,description,last_fetched_at,created_at";
+  "id,title,url,site_url,description,last_fetched_at,provider,provider_resource_type,created_at";
 
 export async function GET(request: Request): Promise<Response> {
   const auth = await authenticateApiToken(request);

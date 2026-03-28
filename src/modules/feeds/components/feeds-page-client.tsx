@@ -4,6 +4,7 @@ import { useFeedsWithCounts, useFeedEntries } from "../lib/hooks";
 import { FeedList } from "./feed-list";
 import { FeedEntryCard } from "./feed-entry-card";
 import { AddFeedDialog } from "./add-feed-dialog";
+import { AddXFeedDialog } from "@/modules/external-feeds/components/add-x-feed-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { RefreshButton } from "@/components/shared/refresh-button";
@@ -14,9 +15,11 @@ import { useInstanceSlug } from "@/lib/instance/context";
 export function FeedsPageClient({
   initialFeeds,
   initialEntries,
+  hasXConnection = false,
 }: {
   initialFeeds: unknown[];
   initialEntries: unknown[];
+  hasXConnection?: boolean;
 }) {
   const slug = useInstanceSlug();
   const { data: feeds } = useFeedsWithCounts(initialFeeds);
@@ -42,7 +45,10 @@ export function FeedsPageClient({
           <h1 className="text-3xl font-bold">Feeds</h1>
           <RefreshButton />
         </div>
-        <AddFeedDialog slug={slug} />
+        <div className="flex items-center gap-2">
+          {hasXConnection && <AddXFeedDialog slug={slug} />}
+          <AddFeedDialog slug={slug} />
+        </div>
       </div>
 
       {displayFeeds.length > 0 ? (

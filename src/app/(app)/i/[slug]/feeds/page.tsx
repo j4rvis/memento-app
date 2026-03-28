@@ -11,11 +11,21 @@ export default async function FeedsPage({
   const { instance } = await resolveInstance(slug);
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: feeds } = await supabase
     .from("feeds")
-    .select("id, title, url")
+    .select("id, title, url, provider")
     .eq("instance_id", instance.id)
     .order("title");
+
+  const { data: xConnection } = await supabase
+    .from("external_connections")
+    .select("id")
+    .eq("instance_id", instance.id)
+    .eq("user_id", user?.id ?? "")
+    .eq("provider", "x")
+    .maybeSingle();
 
   // Fix N+1: single query for all unread counts instead of per-feed queries
   const feedIds = (feeds || []).map((f) => f.id);
@@ -48,6 +58,7 @@ export default async function FeedsPage({
     <FeedsPageClient
       initialFeeds={feedsWithCounts}
       initialEntries={entries ?? []}
+      hasXConnection={!!xConnection}
     />
   );
 }

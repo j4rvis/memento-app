@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { GoogleAccountsCard } from "@/modules/google-calendar/components/google-accounts-card";
+import { ExternalConnectionsCard } from "@/modules/external-feeds/components/external-connections-card";
 
 export default async function IntegrationsSettingsPage({
   params,
@@ -30,6 +31,7 @@ export default async function IntegrationsSettingsPage({
       </div>
 
       <GoogleAccountsCard slug={slug} />
+      <ExternalConnectionsCard slug={slug} />
     </div>
   );
 }

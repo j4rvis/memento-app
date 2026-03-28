@@ -33,12 +33,18 @@ export function FeedEntryCard({ entry, slug }: { entry: FeedEntry; slug: string 
       <CardHeader className="pb-2">
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="line-clamp-2 text-base">
-              {entry.title || "Untitled"}
-            </CardTitle>
+            {entry.title ? (
+              <CardTitle className="line-clamp-2 text-base">
+                {entry.title}
+              </CardTitle>
+            ) : (
+              <p className="line-clamp-3 text-sm">
+                {entry.summary ?? entry.author ?? ""}
+              </p>
+            )}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
               {entry.feeds?.title && <span>{entry.feeds.title}</span>}
-              {entry.author && <span>by {entry.author}</span>}
+              {entry.author && <span>{entry.author}</span>}
               {entry.published_at && (
                 <span>{formatDate(entry.published_at)}</span>
               )}

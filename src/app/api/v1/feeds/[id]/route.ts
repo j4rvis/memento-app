@@ -3,7 +3,7 @@ import { authenticateApiToken, requireScope } from "@/lib/api/auth";
 import { ok, noContent, notFound } from "@/lib/api/response";
 import { API_SCOPES } from "@/lib/api/types";
 
-const FEED_FIELDS = "id,title,url,site_url,description,last_fetched_at,created_at";
+const FEED_FIELDS = "id,title,url,site_url,description,last_fetched_at,provider,provider_resource_type,created_at";
 
 type Params = { params: Promise<{ id: string }> };
 

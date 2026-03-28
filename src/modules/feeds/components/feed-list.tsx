@@ -7,10 +7,15 @@ import { Trash2, RefreshCw } from "lucide-react";
 import { deleteFeed, refreshFeed } from "@/app/(app)/i/[slug]/feeds/actions";
 import { cn } from "@/lib/utils";
 
+const PROVIDER_BADGE: Record<string, string> = {
+  x: "𝕏",
+};
+
 interface Feed {
   id: string;
   title: string;
   url: string;
+  provider?: string;
   unread_count: number;
 }
 
@@ -40,6 +45,11 @@ export function FeedList({ feeds, slug }: { feeds: Feed[]; slug: string }) {
             href={`/i/${slug}/feeds/${feed.id}`}
             className="flex flex-1 items-center gap-2 px-3 py-2 text-sm"
           >
+            {feed.provider && PROVIDER_BADGE[feed.provider] && (
+              <span className="shrink-0 text-xs" title={feed.provider}>
+                {PROVIDER_BADGE[feed.provider]}
+              </span>
+            )}
             <span className="truncate">{feed.title}</span>
             {feed.unread_count > 0 && (
               <span className="ml-auto shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">

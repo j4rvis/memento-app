@@ -115,3 +115,17 @@ export async function revokeApiKey(slug: string, keyId: string) {
   if (error) throw new Error(error.message);
   revalidatePath(`/i/${slug}/settings`);
 }
+
+export async function disconnectExternalConnection(
+  slug: string,
+  connectionId: string
+) {
+  const instanceId = await getInstanceIdFromSlug(slug);
+  const supabase = createServiceRoleClient();
+  await supabase
+    .from("external_connections")
+    .delete()
+    .eq("id", connectionId)
+    .eq("instance_id", instanceId);
+  revalidatePath(`/i/${slug}/settings/integrations`);
+}
