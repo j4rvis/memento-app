@@ -41,11 +41,14 @@ async function resolveBrowser(): Promise<{ executablePath: string; args: string[
     };
   }
 
-  // 2. Try @sparticuz/chromium — verify it's actually executable on this platform
+  // 2. Try @sparticuz/chromium — on Linux (serverless) trust the path directly;
+  //    on macOS verify it's executable since @sparticuz/chromium ships a Linux ELF binary
   try {
     const chromium = await import('@sparticuz/chromium');
     const path = await chromium.default.executablePath();
-    execFileSync(path, ['--version'], { timeout: 3000 });
+    if (process.platform !== 'linux') {
+      execFileSync(path, ['--version'], { timeout: 3000 });
+    }
     return { executablePath: path, args: chromium.default.args };
   } catch {
     // Not executable on this platform (e.g. Linux ELF binary on macOS) — fall through
