@@ -29,16 +29,7 @@ What was created
   1. Restart HA (Settings > System > Restart) to load the new rest_command, shell_command, and input_text blocks.                                                                            
                                                                                                                                                                                              
   2. Fill in credentials — Settings > Helpers, search "Memento":                                                                                                                             
-                                                                                                                                                                                             
-  ┌───────────────────────┬──────────────────────────────────────────────────────────────────┐                                                                                               
-  │        Helper         │                              Value                               │                                                                                               
-  ├───────────────────────┼──────────────────────────────────────────────────────────────────┤
-  │ Memento Client ID     │ mc_12517c40c108cdf9b5319f2d96ba988a                              │
-  ├───────────────────────┼──────────────────────────────────────────────────────────────────┤
-  │ Memento Client Secret │ e339384a2f742efc12f219f04f7439690269eca8f455cdc73726ea8b85864462 │                                                                                               
-  ├───────────────────────┼──────────────────────────────────────────────────────────────────┤                                                                                               
-  │ Memento Template ID   │ d4b6f76c-7b2d-4e28-af89-1cfe633304d6                             │                                                                                               
-  └───────────────────────┴──────────────────────────────────────────────────────────────────┘                                                                                               
+                                                                                                                                                                                                                                                                           
                                                             
   3. Test manually — Developer Tools > Actions > script.memento_print_newspaper > Call.                                                                                                      
                                                             
