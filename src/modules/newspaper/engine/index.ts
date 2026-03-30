@@ -50,7 +50,8 @@ async function resolveBrowser(): Promise<{ executablePath: string; args: string[
       execFileSync(path, ['--version'], { timeout: 3000 });
     }
     return { executablePath: path, args: chromium.default.args };
-  } catch {
+  } catch (err) {
+    console.error('[resolveBrowser] @sparticuz/chromium failed:', err);
     // Not executable on this platform (e.g. Linux ELF binary on macOS) — fall through
   }
 
