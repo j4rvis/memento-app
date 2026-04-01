@@ -16,7 +16,16 @@ import {
   updateArticle,
   setArticleTag,
 } from "@/app/(app)/i/[slug]/articles/actions";
-import { Archive, BookOpen, ExternalLink, Trash2, Edit, Eye, Save, Tag } from "lucide-react";
+import {
+  Archive,
+  BookOpen,
+  ExternalLink,
+  Trash2,
+  Edit,
+  Eye,
+  Save,
+  Tag,
+} from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { useArticleTags } from "../lib/hooks";
 import type { ArticleTag } from "../lib/types";
@@ -26,8 +35,15 @@ function getInstagramEmbedUrl(url: string): string | null {
   return match ? `https://www.instagram.com/p/${match[1]}/embed/` : null;
 }
 
-function getInstagramShortTitle(author: string | null, createdAt: string): string {
-  const date = new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+function getInstagramShortTitle(
+  author: string | null,
+  createdAt: string,
+): string {
+  const date = new Date(createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
   if (author) return `Instagram by ${author} · ${date}`;
   return `Instagram · ${date}`;
 }
@@ -85,14 +101,16 @@ export function ArticleReader({
               ? article.site_name
               : article.content_type}
           </Badge>
-          {currentTag && (
-            <Badge variant="outline">{currentTag.name}</Badge>
-          )}
+          {currentTag && <Badge variant="outline">{currentTag.name}</Badge>}
           {article.content_type !== "other" && article.site_name && (
-            <span className="text-sm text-muted-foreground">{article.site_name}</span>
+            <span className="text-sm text-muted-foreground">
+              {article.site_name}
+            </span>
           )}
           {article.author && (
-            <span className="text-sm text-muted-foreground">by {article.author}</span>
+            <span className="text-sm text-muted-foreground">
+              by {article.author}
+            </span>
           )}
           <span className="text-sm text-muted-foreground">
             {formatDate(article.created_at)}
@@ -110,7 +128,7 @@ export function ArticleReader({
           <h1 className="text-3xl font-bold">
             {instagramEmbedUrl
               ? getInstagramShortTitle(article.author, article.created_at)
-              : (article.title || "Untitled")}
+              : article.title || "Untitled"}
           </h1>
         )}
       </div>
@@ -141,11 +159,21 @@ export function ArticleReader({
               </>
             )}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => toggleRead(slug, article.id)}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => toggleRead(slug, article.id)}
+          >
             <BookOpen className="mr-2 h-4 w-4" />
             {article.is_read ? "Mark Unread" : "Mark Read"}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => toggleArchive(slug, article.id)}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => toggleArchive(slug, article.id)}
+          >
             <Archive className="mr-2 h-4 w-4" />
             {article.is_archived ? "Unarchive" : "Archive"}
           </Button>
@@ -159,16 +187,25 @@ export function ArticleReader({
             <Tag className="h-4 w-4 text-muted-foreground" />
             <select
               value={article.tag_id ?? ""}
-              onChange={(e) => setArticleTag(slug, article.id, e.target.value || null)}
+              onChange={(e) =>
+                setArticleTag(slug, article.id, e.target.value || null)
+              }
               className="h-8 rounded-md border border-input bg-transparent px-2 text-sm"
             >
               <option value="">No tag</option>
               {tags.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>
-          <Button type="button" variant="destructive" size="sm" onClick={handleDelete}>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -192,13 +229,17 @@ export function ArticleReader({
               >
                 <option value="">None</option>
                 {tags.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>
             <input type="hidden" name="title" value={title} />
             <div>
-              <label className="text-sm font-medium mb-1 block">Content (Markdown)</label>
+              <label className="text-sm font-medium mb-1 block">
+                Content (Markdown)
+              </label>
               <Textarea
                 name="content"
                 value={content}
@@ -230,8 +271,8 @@ export function ArticleReader({
                 <iframe
                   src={instagramEmbedUrl}
                   className="rounded-lg border-0"
-                  width="400"
-                  height="520"
+                  width="500"
+                  height="700"
                   loading="lazy"
                   allowFullScreen
                 />
