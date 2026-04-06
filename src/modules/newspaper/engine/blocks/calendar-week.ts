@@ -132,12 +132,13 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
     for (const dayStr of weekDates) {
       const dayAllDay = allDayByDay.get(dayStr)!;
       const entry = dayAllDay[rowIdx];
-      html += `<td style="height:${slotHeight}mm;vertical-align:top;">`;
+      html += `<td style="height:${slotHeight}mm;vertical-align:top;padding:0;">`;
+      html += `<div style="height:${slotHeight}mm;overflow:hidden;">`;
       if (entry) {
         const color = entryColor(entry.color);
         html += renderEntryDiv(entry, slotHeight - 1, color);
       }
-      html += `</td>`;
+      html += `</div></td>`;
     }
     html += `</tr>`;
   }
@@ -175,7 +176,9 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
       }
 
       const rowspanAttr = rowspan > 1 ? ` rowspan="${rowspan}"` : '';
-      html += `<td${rowspanAttr} style="height:${slotHeight}mm;vertical-align:top;">`;
+      const cellHeight = rowspan * slotHeight;
+      html += `<td${rowspanAttr} style="height:${slotHeight}mm;vertical-align:top;padding:0;">`;
+      html += `<div style="height:${cellHeight}mm;overflow:hidden;position:relative;">`;
       for (const entry of entries) {
         const color = entryColor(entry.color);
         const start = new Date(entry.start_at);
@@ -185,7 +188,7 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
         const entryHeight = entrySpan * slotHeight - 1;
         html += renderEntryDiv(entry, entryHeight, color);
       }
-      html += `</td>`;
+      html += `</div></td>`;
     }
     html += `</tr>`;
   }

@@ -332,7 +332,7 @@ function setGoogleCalendarSources(sources: GoogleCalendarSource[]) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={(e) => handleRename(e.target.value.trim() || name)}
-            className="h-7 w-56 text-sm font-semibold border-transparent bg-transparent px-1 focus-visible:border-border focus-visible:bg-background"
+            className="h-7 w-40 text-sm font-semibold border-transparent bg-transparent px-1 focus-visible:border-border focus-visible:bg-background"
           />
           <div className="ml-auto flex items-center gap-2">
             <div className="flex items-center gap-1.5">
@@ -372,18 +372,15 @@ function setGoogleCalendarSources(sources: GoogleCalendarSource[]) {
               onChange={setGoogleCalendarSources}
               initialAccounts={initialAccounts}
             />
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import JSON
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} title="Import JSON">
+              <Upload className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              Export JSON
+            <Button variant="outline" size="sm" onClick={handleExport} title="Export JSON">
+              <Download className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/i/${slug}/newspaper/${templateId}/preview`} target="_blank">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview PDF
+              <Link href={`/i/${slug}/newspaper/${templateId}/preview`} target="_blank" title="Preview PDF">
+                <Eye className="h-4 w-4" />
               </Link>
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isPending}>
