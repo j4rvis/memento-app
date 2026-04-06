@@ -20,11 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BlockPalette } from "./block-palette";
 import { PageCard } from "./page-card";
-import { CalendarEntryManager } from "./calendar-entry-manager";
 import { GoogleCalendarSourcePicker } from "./google-calendar-source-picker";
 import { ImportJsonDialog } from "./import-json-dialog";
 import { updateTemplate, renameTemplate } from "@/app/(app)/i/[slug]/newspaper/actions";
-import type { Block, CalendarEntry, GoogleCalendarSource, NewspaperConfig, Page } from "@/modules/newspaper/lib/types";
+import type { Block, GoogleCalendarSource, NewspaperConfig, Page } from "@/modules/newspaper/lib/types";
 
 interface Props {
   slug: string;
@@ -222,11 +221,7 @@ export function NewspaperEditorClient({
 
   // ─── Calendar entries ─────────────────────────────────────────────────────
 
-  function setCalendarEntries(entries: CalendarEntry[]) {
-    setConfig((prev) => ({ ...prev, calendar_entries: entries }));
-  }
-
-  function setGoogleCalendarSources(sources: GoogleCalendarSource[]) {
+function setGoogleCalendarSources(sources: GoogleCalendarSource[]) {
     setConfig((prev) => ({ ...prev, google_calendar_sources: sources }));
   }
 
@@ -356,11 +351,22 @@ export function NewspaperEditorClient({
                 <option value="bold">Bold</option>
               </select>
             </div>
-            <CalendarEntryManager
-              entries={config.calendar_entries ?? []}
-              onChange={setCalendarEntries}
-            />
-            <GoogleCalendarSourcePicker
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">Timezone</span>
+              <select
+                className="h-7 rounded-md border bg-background px-2 text-xs"
+                value={config.timezone ?? ''}
+                onChange={(e) =>
+                  setConfig((prev) => ({ ...prev, timezone: e.target.value || undefined }))
+                }
+              >
+                <option value="">Auto</option>
+                {Intl.supportedValuesOf('timeZone').map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            </div>
+<GoogleCalendarSourcePicker
               slug={slug}
               sources={config.google_calendar_sources ?? []}
               onChange={setGoogleCalendarSources}
