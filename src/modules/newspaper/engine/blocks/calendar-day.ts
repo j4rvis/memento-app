@@ -1,5 +1,35 @@
 import type { CalendarDayBlock, CalendarEntry } from '../../lib/types';
 
+function getLocalHour(isoString: string, timezone: string): number {
+  const date = new Date(isoString);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone: timezone,
+  }).formatToParts(date);
+  const h = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0', 10);
+  return h === 24 ? 0 : h;
+}
+
+function getLocalMinute(isoString: string, timezone: string): number {
+  const date = new Date(isoString);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    minute: 'numeric',
+    timeZone: timezone,
+  }).formatToParts(date);
+  return parseInt(parts.find(p => p.type === 'minute')?.value ?? '0', 10);
+}
+
+function getLocalDate(isoString: string, timezone: string): string {
+  const date = new Date(isoString);
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: timezone,
+  }).format(date); // yields "YYYY-MM-DD"
+}
+
 function entryColor(color?: string): string {
   return color ?? '#4285f4';
 }
@@ -29,7 +59,7 @@ function renderEntryCell(entry: CalendarEntry, heightMm: number, color: string):
   return `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${heightMm}mm;white-space:normal;overflow:hidden;">${esc(entry.title)}</div>`;
 }
 
-export function renderCalendarDay(block: CalendarDayBlock, globalEntries: CalendarEntry[] = []): string {
+export function renderCalendarDay(block: CalendarDayBlock, globalEntries: CalendarEntry[] = [], timezone = 'UTC'): string {
   const [hourStart, hourEnd] = block.hours ?? [7, 21];
   const slotHeight = block.slot_height_mm ?? 5;
   const showLines = block.show_lines !== false;
@@ -41,8 +71,10 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
     ...(block.entries ?? []),
   ];
 
-  // Filter entries to this day
-  const dayEntries = allEntries.filter(e => e.start_at.slice(0, 10) === dateStr);
+  // Filter entries to this day (using local date in the configured timezone)
+  const dayEntries = allEntries.filter(e =>
+    e.all_day ? e.start_at.slice(0, 10) === dateStr : getLocalDate(e.start_at, timezone) === dateStr
+  );
 
   // Separate full-day from timed
   const allDayEntries = dayEntries.filter(e => e.all_day);
@@ -84,9 +116,9 @@ export function renderCalendarDay(block: CalendarDayBlock, globalEntries: Calend
   for (let i = 0; i < trimmedSlots.length; i++) {
     const slot = trimmedSlots[i];
     const slotEntries = timedEntries.filter(e => {
-      const start = new Date(e.start_at);
-      return start.getHours() === slot.hour &&
-        (slot.minute === 0 ? start.getMinutes() < 30 : start.getMinutes() >= 30);
+      const h = getLocalHour(e.start_at, timezone);
+      const m = getLocalMinute(e.start_at, timezone);
+      return h === slot.hour && (slot.minute === 0 ? m < 30 : m >= 30);
     });
 
     html += `<tr>`;

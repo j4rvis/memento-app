@@ -3,6 +3,27 @@ import type { CalendarWeekBlock, CalendarEntry } from '../../lib/types';
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+function getLocalHour(isoString: string, timezone: string): number {
+  const date = new Date(isoString);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone: timezone,
+  }).formatToParts(date);
+  const h = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0', 10);
+  return h === 24 ? 0 : h;
+}
+
+function getLocalDate(isoString: string, timezone: string): string {
+  const date = new Date(isoString);
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: timezone,
+  }).format(date); // yields "YYYY-MM-DD"
+}
+
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
@@ -44,7 +65,7 @@ function renderEntryDiv(entry: CalendarEntry, heightMm: number, color: string): 
   return `<div class="calendar-entry" style="border-left-color:${color};background:${hexToRgba(color.startsWith('#') ? color : '#4285f4', 0.1)};height:${heightMm}mm;white-space:normal;overflow:hidden;">${esc(entry.title)}</div>`;
 }
 
-export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: CalendarEntry[] = []): string {
+export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: CalendarEntry[] = [], timezone = 'UTC'): string {
   const weekStart = block.week_start ?? 'monday';
   const [hourStart, hourEnd] = block.hours ?? [8, 20];
   const slotHeight = block.slot_height_mm ?? 6;
@@ -71,7 +92,7 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
   }
 
   for (const entry of allEntries) {
-    const entryDate = entry.start_at.slice(0, 10);
+    const entryDate = entry.all_day ? entry.start_at.slice(0, 10) : getLocalDate(entry.start_at, timezone);
     if (!weekDates.includes(entryDate)) continue;
     if (entry.all_day) {
       allDayByDay.get(entryDate)!.push(entry);
@@ -138,8 +159,7 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
       const entries = (timedByDay.get(dayStr) ?? []).filter(e => {
         // all_day entries are excluded — they are already shown in the all-day section above
         if (e.all_day) return false;
-        const h = new Date(e.start_at).getHours();
-        return h === hour;
+        return getLocalHour(e.start_at, timezone) === hour;
       });
 
       let rowspan = 1;

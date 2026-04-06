@@ -178,6 +178,7 @@ export interface GoogleCalendarSource {
 export interface NewspaperConfig {
   title: string;
   date?: string;
+  timezone?: string; // IANA timezone name e.g. "Europe/Berlin". Used for calendar event display.
   paper_size?: 'A4' | 'Letter' | 'A5';
   orientation?: 'portrait' | 'landscape';
   theme?: 'classic' | 'broadsheet' | 'vintage' | 'elegant' | 'bold';

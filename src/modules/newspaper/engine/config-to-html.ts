@@ -11,14 +11,14 @@ import { renderDivider } from './blocks/divider';
 import { renderSpacer } from './blocks/spacer';
 
 
-async function blockToHtml(block: Block, date: string | undefined, globalEntries: CalendarEntry[]): Promise<string> {
+async function blockToHtml(block: Block, date: string | undefined, globalEntries: CalendarEntry[], timezone: string): Promise<string> {
   switch (block.type) {
     case 'title':         return renderTitle(block, date);
     case 'markdown':      return renderMarkdown(block);
     case 'weather':       return renderWeather(block);
     case 'writing-lines': return renderWritingLines(block);
-    case 'calendar-week': return renderCalendarWeek(block, globalEntries);
-    case 'calendar-day':  return renderCalendarDay(block, globalEntries);
+    case 'calendar-week': return renderCalendarWeek(block, globalEntries, timezone);
+    case 'calendar-day':  return renderCalendarDay(block, globalEntries, timezone);
     case 'divider':       return renderDivider(block);
     case 'spacer':        return renderSpacer(block);
     case 'todos':         return '';
@@ -26,13 +26,14 @@ async function blockToHtml(block: Block, date: string | undefined, globalEntries
   }
 }
 
-async function blocksToHtml(blocks: Block[], date: string | undefined, globalEntries: CalendarEntry[]): Promise<string> {
-  const parts = await Promise.all(blocks.map(b => blockToHtml(b, date, globalEntries)));
+async function blocksToHtml(blocks: Block[], date: string | undefined, globalEntries: CalendarEntry[], timezone: string): Promise<string> {
+  const parts = await Promise.all(blocks.map(b => blockToHtml(b, date, globalEntries, timezone)));
   return parts.join('\n');
 }
 
 export async function configToHtml(config: NewspaperConfig): Promise<string> {
   const date = config.date ?? new Date().toISOString().slice(0, 10);
+  const timezone = config.timezone ?? 'UTC';
   const globalEntries = config.calendar_entries ?? [];
   const margins = config.margins ?? { top: 15, right: 15, bottom: 15, left: 15 };
   const fontSize = config.base_font_size ?? 11;
@@ -71,7 +72,7 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
 
     if (page.layout === 'single') {
       const blocks = page.blocks ?? [];
-      pageContent = await blocksToHtml(blocks, date, globalEntries);
+      pageContent = await blocksToHtml(blocks, date, globalEntries, timezone);
     } else {
       const columns = page.columns ?? [];
       const colCount = page.layout === 'three-column' ? 3 : 2;
@@ -82,7 +83,7 @@ export async function configToHtml(config: NewspaperConfig): Promise<string> {
       pageContent += `<div class="${cssClass}" style="${gapStyle}">`;
       for (let i = 0; i < colCount; i++) {
         const colBlocks = columns[i] ?? [];
-        const colHtml = await blocksToHtml(colBlocks, date, globalEntries);
+        const colHtml = await blocksToHtml(colBlocks, date, globalEntries, timezone);
         pageContent += `<div class="column">${colHtml}</div>`;
       }
       pageContent += `</div>`;
