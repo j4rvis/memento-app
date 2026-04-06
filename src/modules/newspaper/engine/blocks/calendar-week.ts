@@ -178,7 +178,10 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
       const rowspanAttr = rowspan > 1 ? ` rowspan="${rowspan}"` : '';
       const cellHeight = rowspan * slotHeight;
       html += `<td${rowspanAttr} style="height:${slotHeight}mm;vertical-align:top;padding:0;">`;
-      html += `<div style="height:${cellHeight}mm;overflow:hidden;position:relative;">`;
+      html += `<div style="height:${cellHeight}mm;overflow:hidden;display:flex;flex-direction:row;gap:0.5mm;">`;
+      if (entries.length === 0) {
+        html += `<div style="flex:1;"></div>`;
+      }
       for (const entry of entries) {
         const color = entryColor(entry.color);
         const start = new Date(entry.start_at);
@@ -186,7 +189,7 @@ export function renderCalendarWeek(block: CalendarWeekBlock, globalEntries: Cale
         const durationHours = Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000));
         const entrySpan = Math.min(Math.max(1, durationHours), totalHours - hi);
         const entryHeight = entrySpan * slotHeight - 1;
-        html += renderEntryDiv(entry, entryHeight, color);
+        html += `<div style="flex:1;min-width:0;">` + renderEntryDiv(entry, entryHeight, color) + `</div>`;
       }
       html += `</div></td>`;
     }
