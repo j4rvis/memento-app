@@ -52,13 +52,13 @@ export async function resolveConfig(
   if (config.google_calendar_sources?.length) {
     await Promise.all([
       ...config.google_calendar_sources.map(({ account_id }) =>
-        syncCalendarList(account_id, ctx.userId, ctx.instanceId)
+        syncCalendarList(account_id, ctx.userId, ctx.instanceId).catch(() => {})
       ),
       ...config.google_calendar_sources
         .filter((s) => s.calendar_ids?.length)
         .flatMap(({ account_id, calendar_ids }) =>
           (calendar_ids ?? []).map((calId) =>
-            syncCalendar(account_id, calId, ctx.userId, ctx.instanceId)
+            syncCalendar(account_id, calId, ctx.userId, ctx.instanceId).catch(() => {})
           )
         ),
     ]);
